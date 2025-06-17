@@ -12,7 +12,7 @@
 #include "octa-core/core/GameCell.h"
 
 GameCell::GameCell(const Coordinate& coordinate, CellState initialState)
-    : coordinate_(coordinate), state_(initialState), direction_(Direction::N) {
+    : coordinate_(coordinate), state_(initialState), direction_(Direction::N), value_(0) {
     // Initialize all neighbors as empty weak_ptr instances
     // No explicit initialization needed for std::array of weak_ptr
 }

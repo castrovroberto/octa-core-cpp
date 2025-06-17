@@ -28,6 +28,7 @@ add_executable(
     src/map/GraphGameMap.cpp
     src/map/ArrayGameMap.cpp
     src/engine/GameEngine.cpp
+    src/logic/OctaGameLogic.cpp
 )
 
 # Set target properties
@@ -73,6 +74,7 @@ if(BUILD_TESTS)
             src/map/GraphGameMap.cpp
             src/map/ArrayGameMap.cpp
             src/engine/GameEngine.cpp
+            src/logic/OctaGameLogic.cpp
         )
         
         target_link_libraries(

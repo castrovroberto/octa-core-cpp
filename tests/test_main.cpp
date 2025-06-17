@@ -17,6 +17,9 @@
 #include "octa-core/map/IGameMap.h"
 #include "octa-core/map/GraphGameMap.h"
 #include "octa-core/map/ArrayGameMap.h"
+#include "octa-core/model/GameConfig.h"
+#include "octa-core/logic/IGameLogic.h"
+#include "octa-core/logic/OctaGameLogic.h"
 
 /**
  * @brief Basic placeholder test to verify test infrastructure works
@@ -441,6 +444,226 @@ TEST_F(ArrayGameMapTests, PlaceholderBehavior) {
     
     // Note: We can't test other methods since constructor throws
     // This is expected behavior for the placeholder implementation
+}
+
+// ============================================================================
+// PHASE P1.3 TESTS: Game Logic Foundation
+// ============================================================================
+
+/**
+ * @brief Test suite for GameConfig structure
+ */
+class GameConfigTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup common test data if needed
+    }
+};
+
+TEST_F(GameConfigTests, DefaultConstructor) {
+    GameConfig config;
+    
+    EXPECT_EQ(config.winCondition, WinCondition::ELIMINATION);
+    EXPECT_EQ(config.turnLimit, 100);
+    EXPECT_EQ(config.stopOnEnemy, false);
+    EXPECT_EQ(config.safetyLevel, SafetyLevel::VALIDATE_ONLY);
+    EXPECT_TRUE(config.isValid());
+}
+
+TEST_F(GameConfigTests, CustomConstructor) {
+    GameConfig config(WinCondition::TURN_LIMIT_MAJORITY, 50, true, SafetyLevel::LIGHT_UNDO);
+    
+    EXPECT_EQ(config.winCondition, WinCondition::TURN_LIMIT_MAJORITY);
+    EXPECT_EQ(config.turnLimit, 50);
+    EXPECT_EQ(config.stopOnEnemy, true);
+    EXPECT_EQ(config.safetyLevel, SafetyLevel::LIGHT_UNDO);
+    EXPECT_TRUE(config.isValid());
+}
+
+TEST_F(GameConfigTests, InvalidConfiguration) {
+    GameConfig config;
+    config.turnLimit = -1;
+    EXPECT_FALSE(config.isValid());
+    
+    config.turnLimit = 0;
+    EXPECT_FALSE(config.isValid());
+}
+
+TEST_F(GameConfigTests, EnumStringConversion) {
+    EXPECT_STREQ(winConditionToString(WinCondition::ELIMINATION), "ELIMINATION");
+    EXPECT_STREQ(winConditionToString(WinCondition::TURN_LIMIT_MAJORITY), "TURN_LIMIT_MAJORITY");
+    
+    EXPECT_STREQ(safetyLevelToString(SafetyLevel::VALIDATE_ONLY), "VALIDATE_ONLY");
+    EXPECT_STREQ(safetyLevelToString(SafetyLevel::LIGHT_UNDO), "LIGHT_UNDO");
+    EXPECT_STREQ(safetyLevelToString(SafetyLevel::FULL_ROLLBACK), "FULL_ROLLBACK");
+}
+
+/**
+ * @brief Test suite for GameResult structure
+ */
+class GameResultTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup common test data if needed
+    }
+};
+
+TEST_F(GameResultTests, DefaultConstructor) {
+    GameResult result;
+    
+    EXPECT_FALSE(result.winner.has_value());
+    EXPECT_TRUE(result.reason.empty());
+    EXPECT_EQ(result.finalTurnCount, 0);
+    EXPECT_EQ(result.player1CellCount, 0);
+    EXPECT_EQ(result.player2CellCount, 0);
+    EXPECT_TRUE(result.isTie());
+}
+
+TEST_F(GameResultTests, WinnerConstructor) {
+    GameResult result(Player::PLAYER_1, "Player 2 eliminated", 15, 8, 0);
+    
+    EXPECT_TRUE(result.winner.has_value());
+    EXPECT_EQ(result.winner.value(), Player::PLAYER_1);
+    EXPECT_EQ(result.reason, "Player 2 eliminated");
+    EXPECT_EQ(result.finalTurnCount, 15);
+    EXPECT_EQ(result.player1CellCount, 8);
+    EXPECT_EQ(result.player2CellCount, 0);
+    EXPECT_FALSE(result.isTie());
+}
+
+TEST_F(GameResultTests, TieConstructor) {
+    GameResult result("Turn limit reached", 50, 5, 5);
+    
+    EXPECT_FALSE(result.winner.has_value());
+    EXPECT_EQ(result.reason, "Turn limit reached");
+    EXPECT_EQ(result.finalTurnCount, 50);
+    EXPECT_EQ(result.player1CellCount, 5);
+    EXPECT_EQ(result.player2CellCount, 5);
+    EXPECT_TRUE(result.isTie());
+}
+
+TEST_F(GameResultTests, ToStringMethod) {
+    GameResult winResult(Player::PLAYER_2, "Player 1 eliminated", 10, 0, 7);
+    std::string winString = winResult.toString();
+    EXPECT_NE(winString.find("Player 2 wins"), std::string::npos);
+    EXPECT_NE(winString.find("10 turns"), std::string::npos);
+    
+    GameResult tieResult("Draw", 25, 3, 3);
+    std::string tieString = tieResult.toString();
+    EXPECT_NE(tieString.find("Tie game"), std::string::npos);
+    EXPECT_NE(tieString.find("25 turns"), std::string::npos);
+}
+
+/**
+ * @brief Test suite for OctaGameLogic class
+ */
+class OctaGameLogicTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        gameMap = std::make_shared<GraphGameMap>(2); // Small 5x5 map for testing
+        config = GameConfig();
+    }
+    
+    std::shared_ptr<GraphGameMap> gameMap;
+    GameConfig config;
+};
+
+TEST_F(OctaGameLogicTests, ConstructorAndInitialization) {
+    OctaGameLogic logic(gameMap, config);
+    
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_1);
+    EXPECT_EQ(logic.getTurnCount(), 0);
+    EXPECT_FALSE(logic.isGameOver());
+    EXPECT_FALSE(logic.getGameResult().has_value());
+    EXPECT_EQ(logic.getConfig().winCondition, WinCondition::ELIMINATION);
+}
+
+TEST_F(OctaGameLogicTests, InvalidConstructor) {
+    EXPECT_THROW(OctaGameLogic(nullptr, config), std::invalid_argument);
+    
+    GameConfig invalidConfig;
+    invalidConfig.turnLimit = -1;
+    EXPECT_THROW(OctaGameLogic(gameMap, invalidConfig), std::invalid_argument);
+}
+
+TEST_F(OctaGameLogicTests, ValidMoveValidation) {
+    OctaGameLogic logic(gameMap, config);
+    auto centerCell = gameMap->at(Coordinate(0, 0));
+    
+    // Should be valid for player 1 on neutral cell
+    EXPECT_TRUE(logic.isValidMove(centerCell, Player::PLAYER_1));
+    
+    // Should be invalid for player 2 (not their turn)
+    EXPECT_FALSE(logic.isValidMove(centerCell, Player::PLAYER_2));
+    
+    // Should be invalid for null cell
+    EXPECT_FALSE(logic.isValidMove(nullptr, Player::PLAYER_1));
+}
+
+TEST_F(OctaGameLogicTests, BasicMoveExecution) {
+    OctaGameLogic logic(gameMap, config);
+    auto centerCell = gameMap->at(Coordinate(0, 0));
+    
+    // Make a move for player 1
+    GameResult result = logic.makeMove(centerCell, Player::PLAYER_1);
+    
+    // Check that the cell is now owned by player 1
+    EXPECT_EQ(centerCell->getState(), CellState::PLAYER_1);
+    EXPECT_EQ(centerCell->getValue(), 1);
+    
+    // Check that it's now player 2's turn
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_2);
+    
+    // Game should continue
+    EXPECT_EQ(result.reason, "Game continues");
+    EXPECT_FALSE(logic.isGameOver());
+}
+
+TEST_F(OctaGameLogicTests, InvalidMoveThrows) {
+    OctaGameLogic logic(gameMap, config);
+    auto centerCell = gameMap->at(Coordinate(0, 0));
+    
+    // Should throw for wrong player
+    EXPECT_THROW(logic.makeMove(centerCell, Player::PLAYER_2), std::invalid_argument);
+    
+    // Should throw for null cell
+    EXPECT_THROW(logic.makeMove(nullptr, Player::PLAYER_1), std::invalid_argument);
+}
+
+TEST_F(OctaGameLogicTests, PlayerSwitching) {
+    OctaGameLogic logic(gameMap, config);
+    
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_1);
+    logic.switchPlayer();
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_2);
+    logic.switchPlayer();
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_1);
+}
+
+TEST_F(OctaGameLogicTests, GameReset) {
+    OctaGameLogic logic(gameMap, config);
+    auto centerCell = gameMap->at(Coordinate(0, 0));
+    
+    // Make a move
+    logic.makeMove(centerCell, Player::PLAYER_1);
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_2);
+    
+    // Reset game
+    logic.resetGame();
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_1);
+    EXPECT_EQ(logic.getTurnCount(), 0);
+    EXPECT_FALSE(logic.isGameOver());
+}
+
+TEST_F(OctaGameLogicTests, ConfigurationUpdate) {
+    OctaGameLogic logic(gameMap, config);
+    
+    GameConfig newConfig(WinCondition::TURN_LIMIT_MAJORITY, 10, true, SafetyLevel::LIGHT_UNDO);
+    logic.resetGame(&newConfig);
+    
+    EXPECT_EQ(logic.getConfig().winCondition, WinCondition::TURN_LIMIT_MAJORITY);
+    EXPECT_EQ(logic.getConfig().turnLimit, 10);
+    EXPECT_EQ(logic.getConfig().stopOnEnemy, true);
 }
 
 /**

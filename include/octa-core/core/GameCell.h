@@ -104,6 +104,18 @@ public:
     void setDirection(Direction direction) { direction_ = direction; }
 
     /**
+     * @brief Gets the current value/energy level of this cell.
+     * @return The current value of the cell.
+     */
+    int getValue() const { return value_; }
+
+    /**
+     * @brief Sets the value/energy level of this cell.
+     * @param value The new value for the cell.
+     */
+    void setValue(int value) { value_ = value; }
+
+    /**
      * @brief Gets a neighbor in the specified direction.
      * @param direction The direction to look for a neighbor.
      * @return Shared pointer to the neighbor cell, or nullptr if no neighbor exists or if the weak_ptr has expired.
@@ -159,6 +171,7 @@ private:
     Coordinate coordinate_;                                        ///< Position of this cell on the map
     CellState state_;                                             ///< Current state/ownership of the cell
     Direction direction_;                                         ///< Current direction property for this cell
+    int value_;                                                   ///< Current value/energy level of the cell
     std::array<std::weak_ptr<GameCell>, NUM_DIRECTIONS> neighbors_; ///< Neighbors in all 8 directions
 
     static constexpr size_t NUM_DIRECTIONS = 8;
