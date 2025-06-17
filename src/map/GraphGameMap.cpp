@@ -1,3 +1,15 @@
+/**
+ * @file GraphGameMap.cpp
+ * @brief Implementation of the GraphGameMap class
+ * 
+ * This file implements the GraphGameMap class methods, providing a hash map-based
+ * implementation of the IGameMap interface. The implementation handles octagonal
+ * grid initialization, neighbor linking, and efficient coordinate-based lookups.
+ * 
+ * Updated in Phase P1.2 to implement the new SRD v3.2 interface specification
+ * and work with the refactored GameCell class.
+ */
+
 #include "octa-core/map/GraphGameMap.h"
 #include <cmath>
 #include <algorithm>
@@ -6,42 +18,37 @@ GraphGameMap::GraphGameMap(int size) : mapSize_(size) {
     initializeMap();
 }
 
-std::shared_ptr<GameCell> GraphGameMap::getCell(const Coordinate& coord) const {
+std::shared_ptr<GameCell> GraphGameMap::at(const Coordinate& coord) const {
     auto it = cells_.find(coord);
     return (it != cells_.end()) ? it->second : nullptr;
 }
 
-std::vector<std::shared_ptr<GameCell>> GraphGameMap::getAllCells() const {
-    std::vector<std::shared_ptr<GameCell>> allCells;
-    allCells.reserve(cells_.size());
-    
-    for (const auto& pair : cells_) {
-        allCells.push_back(pair.second);
-    }
-    
-    return allCells;
+size_t GraphGameMap::size() const {
+    return cells_.size();
 }
 
-int GraphGameMap::getSize() const {
-    return mapSize_;
-}
-
-int GraphGameMap::getTotalCellCount() const {
-    return static_cast<int>(cells_.size());
+bool GraphGameMap::isValidCoordinate(const Coordinate& coord) const {
+    int x = coord.getX();
+    int y = coord.getY();
+    
+    // For octagonal grid, use Chebyshev distance (max of |x|, |y|) <= mapSize
+    // This creates a square boundary which is appropriate for 8-directional movement
+    return (std::abs(x) <= mapSize_ && std::abs(y) <= mapSize_);
 }
 
 void GraphGameMap::initializeMap() {
-    // Create all cells first
+    // Create all cells first with NEUTRAL state and default direction
     for (int x = -mapSize_; x <= mapSize_; ++x) {
         for (int y = -mapSize_; y <= mapSize_; ++y) {
             Coordinate coord(x, y);
             if (isValidCoordinate(coord)) {
-                cells_[coord] = std::make_shared<GameCell>(coord);
+                // Initialize cells with NEUTRAL state and N direction
+                cells_[coord] = std::make_shared<GameCell>(coord, CellState::NEUTRAL);
             }
         }
     }
     
-    // Then link neighbors
+    // Then link neighbors using weak_ptr references
     for (const auto& pair : cells_) {
         linkCellNeighbors(pair.second);
     }
@@ -59,6 +66,7 @@ void GraphGameMap::linkCellNeighbors(const std::shared_ptr<GameCell>& cell) {
         
         auto neighborIt = cells_.find(neighborCoord);
         if (neighborIt != cells_.end()) {
+            // Set neighbor using the new GameCell API
             cell->setNeighbor(direction, neighborIt->second);
         }
     }
@@ -87,13 +95,4 @@ Coordinate GraphGameMap::getNeighborCoordinate(int x, int y, Direction dir) cons
         default:
             return Coordinate(x, y); // Should never happen
     }
-}
-
-bool GraphGameMap::isValidCoordinate(const Coordinate& coord) const {
-    int x = coord.getX();
-    int y = coord.getY();
-    
-    // For octagonal grid, use Chebyshev distance (max of |x|, |y|) <= mapSize
-    // This creates a square boundary which is appropriate for 8-directional movement
-    return (std::abs(x) <= mapSize_ && std::abs(y) <= mapSize_);
 } 

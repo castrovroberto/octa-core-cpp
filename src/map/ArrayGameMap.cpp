@@ -1,36 +1,36 @@
+/**
+ * @file ArrayGameMap.cpp
+ * @brief Implementation of the ArrayGameMap class placeholder
+ * 
+ * This file provides placeholder implementations for the ArrayGameMap class.
+ * All methods throw runtime_error with descriptive messages indicating that
+ * this implementation is not yet available.
+ * 
+ * Updated in Phase P1.2 to implement the new SRD v3.2 interface specification.
+ */
+
 #include "octa-core/map/ArrayGameMap.h"
 #include <stdexcept>
 
 ArrayGameMap::ArrayGameMap(int size) : mapSize_(size) {
-    // TODO: Implement array-based map initialization
-    // This is a placeholder implementation
+    throw std::runtime_error("ArrayGameMap constructor not implemented yet - use GraphGameMap instead");
 }
 
-std::shared_ptr<GameCell> ArrayGameMap::getCell(const Coordinate& coord) const {
-    // TODO: Implement array-based cell retrieval
-    throw std::runtime_error("ArrayGameMap::getCell not yet implemented");
+std::shared_ptr<GameCell> ArrayGameMap::at(const Coordinate& coord) const {
+    (void)coord; // Suppress unused parameter warning
+    throw std::runtime_error("ArrayGameMap::at() not implemented yet - use GraphGameMap instead");
 }
 
-std::vector<std::shared_ptr<GameCell>> ArrayGameMap::getAllCells() const {
-    // TODO: Implement array-based cell collection
-    throw std::runtime_error("ArrayGameMap::getAllCells not yet implemented");
-}
-
-int ArrayGameMap::getSize() const {
-    return mapSize_;
-}
-
-int ArrayGameMap::getTotalCellCount() const {
-    // TODO: Calculate based on actual implementation
-    throw std::runtime_error("ArrayGameMap::getTotalCellCount not yet implemented");
+size_t ArrayGameMap::size() const {
+    throw std::runtime_error("ArrayGameMap::size() not implemented yet - use GraphGameMap instead");
 }
 
 Coordinate ArrayGameMap::worldToArray(const Coordinate& coord) const {
-    // TODO: Implement coordinate transformation
-    throw std::runtime_error("ArrayGameMap::worldToArray not yet implemented");
+    (void)coord; // Suppress unused parameter warning
+    throw std::runtime_error("ArrayGameMap::worldToArray() not implemented yet");
 }
 
 bool ArrayGameMap::isValidArrayCoordinate(const Coordinate& arrayCoord) const {
-    // TODO: Implement array bounds checking
-    throw std::runtime_error("ArrayGameMap::isValidArrayCoordinate not yet implemented");
+    (void)arrayCoord; // Suppress unused parameter warning
+    throw std::runtime_error("ArrayGameMap::isValidArrayCoordinate() not implemented yet");
 } 

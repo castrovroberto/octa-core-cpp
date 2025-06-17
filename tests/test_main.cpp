@@ -14,6 +14,9 @@
 #include "octa-core/core/Enums.h"
 #include "octa-core/core/Direction.h"
 #include "octa-core/core/GameCell.h"
+#include "octa-core/map/IGameMap.h"
+#include "octa-core/map/GraphGameMap.h"
+#include "octa-core/map/ArrayGameMap.h"
 
 /**
  * @brief Basic placeholder test to verify test infrastructure works
@@ -316,6 +319,128 @@ TEST_F(GameCellTests, WeakPtrBehavior) {
     EXPECT_FALSE(cell1->hasNeighbor(Direction::W));
     EXPECT_EQ(cell1->getValidNeighborCount(), 0);
     EXPECT_EQ(cell1->getNeighbor(Direction::W), nullptr);
+}
+
+// ============================================================================
+// PHASE P1.2 TESTS: Map Interface Refactoring
+// ============================================================================
+
+/**
+ * @brief Test suite for IGameMap interface and GraphGameMap implementation
+ */
+class GraphGameMapTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Create test maps of different sizes
+        map1 = std::make_unique<GraphGameMap>(1);  // 3x3 grid (9 cells)
+        map2 = std::make_unique<GraphGameMap>(2);  // 5x5 grid (25 cells)
+    }
+    
+    std::unique_ptr<GraphGameMap> map1, map2;
+};
+
+TEST_F(GraphGameMapTests, MapSizeAndCellCount) {
+    // Test size() method (total cell count)
+    EXPECT_EQ(map1->size(), 9);   // (2*1+1)² = 3² = 9
+    EXPECT_EQ(map2->size(), 25);  // (2*2+1)² = 5² = 25
+    
+    // Test getRadius() utility method
+    EXPECT_EQ(map1->getRadius(), 1);
+    EXPECT_EQ(map2->getRadius(), 2);
+}
+
+TEST_F(GraphGameMapTests, CellAccessAndValidation) {
+    // Test at() method for valid coordinates
+    auto cell00 = map1->at(Coordinate(0, 0));
+    ASSERT_NE(cell00, nullptr);
+    EXPECT_EQ(cell00->getCoordinate().getX(), 0);
+    EXPECT_EQ(cell00->getCoordinate().getY(), 0);
+    EXPECT_EQ(cell00->getState(), CellState::NEUTRAL);
+    
+    // Test at() method for boundary coordinates
+    auto cell11 = map1->at(Coordinate(1, 1));
+    auto cellNeg11 = map1->at(Coordinate(-1, -1));
+    ASSERT_NE(cell11, nullptr);
+    ASSERT_NE(cellNeg11, nullptr);
+    
+    // Test at() method for invalid coordinates (outside bounds)
+    auto invalidCell = map1->at(Coordinate(2, 2));  // Outside size=1 bounds
+    EXPECT_EQ(invalidCell, nullptr);
+    
+    // Test isValidCoordinate utility method
+    EXPECT_TRUE(map1->isValidCoordinate(Coordinate(0, 0)));
+    EXPECT_TRUE(map1->isValidCoordinate(Coordinate(1, 1)));
+    EXPECT_TRUE(map1->isValidCoordinate(Coordinate(-1, -1)));
+    EXPECT_FALSE(map1->isValidCoordinate(Coordinate(2, 2)));
+}
+
+TEST_F(GraphGameMapTests, NeighborLinking) {
+    // Get the center cell
+    auto centerCell = map2->at(Coordinate(0, 0));
+    ASSERT_NE(centerCell, nullptr);
+    
+    // Check that all 8 neighbors are properly linked
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::N));
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::NE));
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::E));
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::SE));
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::S));
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::SW));
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::W));
+    EXPECT_TRUE(centerCell->hasNeighbor(Direction::NW));
+    
+    // Verify neighbor coordinates
+    auto northNeighbor = centerCell->getNeighbor(Direction::N);
+    ASSERT_NE(northNeighbor, nullptr);
+    EXPECT_EQ(northNeighbor->getCoordinate(), Coordinate(0, 1));
+    
+    auto neNeighbor = centerCell->getNeighbor(Direction::NE);
+    ASSERT_NE(neNeighbor, nullptr);
+    EXPECT_EQ(neNeighbor->getCoordinate(), Coordinate(1, 1));
+    
+    // Test corner cell (should have fewer neighbors)
+    auto cornerCell = map2->at(Coordinate(2, 2));
+    ASSERT_NE(cornerCell, nullptr);
+    
+    // Corner cell should not have neighbors in certain directions
+    EXPECT_FALSE(cornerCell->hasNeighbor(Direction::N));   // Would be (2, 3) - outside bounds
+    EXPECT_FALSE(cornerCell->hasNeighbor(Direction::NE));  // Would be (3, 3) - outside bounds
+    EXPECT_FALSE(cornerCell->hasNeighbor(Direction::E));   // Would be (3, 2) - outside bounds
+    
+    // But should have neighbors in other directions
+    EXPECT_TRUE(cornerCell->hasNeighbor(Direction::SW));   // Should be (1, 1)
+    EXPECT_TRUE(cornerCell->hasNeighbor(Direction::W));    // Should be (1, 2)
+    EXPECT_TRUE(cornerCell->hasNeighbor(Direction::S));    // Should be (2, 1)
+}
+
+TEST_F(GraphGameMapTests, CellStateInitialization) {
+    // All cells should be initialized with NEUTRAL state
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            auto cell = map1->at(Coordinate(x, y));
+            ASSERT_NE(cell, nullptr);
+            EXPECT_EQ(cell->getState(), CellState::NEUTRAL);
+            EXPECT_EQ(cell->getDirection(), Direction::N);  // Default direction
+        }
+    }
+}
+
+/**
+ * @brief Test suite for ArrayGameMap placeholder
+ */
+class ArrayGameMapTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // ArrayGameMap should throw on construction
+    }
+};
+
+TEST_F(ArrayGameMapTests, PlaceholderBehavior) {
+    // Constructor should throw
+    EXPECT_THROW(ArrayGameMap(1), std::runtime_error);
+    
+    // Note: We can't test other methods since constructor throws
+    // This is expected behavior for the placeholder implementation
 }
 
 /**
