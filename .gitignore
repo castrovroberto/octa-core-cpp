@@ -30,3 +30,77 @@
 *.exe
 *.out
 *.app
+
+# CMake build artifacts
+build/
+Build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+*.cmake
+!CMakeLists.txt
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.user
+*.vcxproj.user
+*.vcproj.user
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Debugger files
+*.pdb
+*.dSYM/
+
+# Test coverage
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
+# Package managers
+conan/
+vcpkg/
+_deps/
+
+# Custom project-specific executables (in build directory)
+build/octa-core
+build/octa-core.exe
+/octa-core
+/octa-core.exe
+
+# Temporary files
+*.tmp
+*.temp
+*.log
