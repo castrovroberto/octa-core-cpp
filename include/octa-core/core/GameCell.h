@@ -10,12 +10,14 @@ class GameCell;
 
 /**
  * @enum Direction
- * @brief Represents the 6 directions in a hexagonal grid.
+ * @brief Represents the 8 directions in an octagonal grid.
  */
 enum class Direction {
+    NORTH,
     NORTH_EAST,
     EAST,
     SOUTH_EAST,
+    SOUTH,
     SOUTH_WEST,
     WEST,
     NORTH_WEST
@@ -33,10 +35,10 @@ enum class Player {
 
 /**
  * @class GameCell
- * @brief Represents a single cell on the hexagonal game map.
+ * @brief Represents a single cell on the octagonal game map.
  *
  * Each cell has a coordinate position, can be occupied by a player,
- * and maintains references to its neighbors in the hexagonal grid.
+ * and maintains references to its neighbors in the octagonal grid.
  */
 class GameCell {
 public:
@@ -101,7 +103,7 @@ private:
     Player occupant_;
     std::vector<std::shared_ptr<GameCell>> neighbors_;  // Index corresponds to Direction enum values
 
-    static constexpr size_t NUM_DIRECTIONS = 6;
+    static constexpr size_t NUM_DIRECTIONS = 8;
 };
 
 #endif // OCTA_CORE_GAMECELL_H 

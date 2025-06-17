@@ -19,15 +19,15 @@ struct CoordinateHash {
  * @brief A graph-based implementation of IGameMap using hash maps.
  *
  * This implementation uses an unordered_map for efficient coordinate-based
- * lookups and is ideal for sparse hexagonal grids where cells are connected
+ * lookups and is ideal for sparse octagonal grids where cells are connected
  * in a graph-like structure.
  */
 class GraphGameMap : public IGameMap {
 public:
-    /**
-     * @brief Constructor that creates a hexagonal map of the specified size.
-     * @param size The radius of the hexagonal map.
-     */
+         /**
+      * @brief Constructor that creates an octagonal map of the specified size.
+      * @param size The radius of the octagonal map.
+      */
     explicit GraphGameMap(int size);
 
     // IGameMap interface implementation
@@ -37,15 +37,15 @@ public:
     int getTotalCellCount() const override;
 
 private:
-    /**
-     * @brief Initializes the hexagonal map with all cells.
-     */
+         /**
+      * @brief Initializes the octagonal map with all cells.
+      */
     void initializeMap();
 
-    /**
-     * @brief Links a cell with its neighbors in the hexagonal grid.
-     * @param cell The cell to link with its neighbors.
-     */
+         /**
+      * @brief Links a cell with its neighbors in the octagonal grid.
+      * @param cell The cell to link with its neighbors.
+      */
     void linkCellNeighbors(const std::shared_ptr<GameCell>& cell);
 
     /**
@@ -57,11 +57,11 @@ private:
      */
     Coordinate getNeighborCoordinate(int x, int y, Direction dir) const;
 
-    /**
-     * @brief Checks if a coordinate is within the bounds of the hexagonal map.
-     * @param coord The coordinate to check.
-     * @return True if the coordinate is valid, false otherwise.
-     */
+         /**
+      * @brief Checks if a coordinate is within the bounds of the octagonal map.
+      * @param coord The coordinate to check.
+      * @return True if the coordinate is valid, false otherwise.
+      */
     bool isValidCoordinate(const Coordinate& coord) const;
 
     int mapSize_;

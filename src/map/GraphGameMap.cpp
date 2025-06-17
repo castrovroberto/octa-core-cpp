@@ -52,8 +52,8 @@ void GraphGameMap::linkCellNeighbors(const std::shared_ptr<GameCell>& cell) {
     int x = coord.getX();
     int y = coord.getY();
     
-    // Link all 6 hexagonal directions
-    for (int dir = 0; dir < 6; ++dir) {
+    // Link all 8 octagonal directions
+    for (int dir = 0; dir < 8; ++dir) {
         Direction direction = static_cast<Direction>(dir);
         Coordinate neighborCoord = getNeighborCoordinate(x, y, direction);
         
@@ -65,17 +65,21 @@ void GraphGameMap::linkCellNeighbors(const std::shared_ptr<GameCell>& cell) {
 }
 
 Coordinate GraphGameMap::getNeighborCoordinate(int x, int y, Direction dir) const {
-    // Hexagonal grid neighbor calculations
-    // Using axial coordinates where we have 6 directions
+    // Octagonal grid neighbor calculations
+    // Using standard 8-directional grid with cardinal and diagonal directions
     switch (dir) {
-        case Direction::NORTH_EAST:
+        case Direction::NORTH:
             return Coordinate(x, y + 1);
+        case Direction::NORTH_EAST:
+            return Coordinate(x + 1, y + 1);
         case Direction::EAST:
             return Coordinate(x + 1, y);
         case Direction::SOUTH_EAST:
             return Coordinate(x + 1, y - 1);
-        case Direction::SOUTH_WEST:
+        case Direction::SOUTH:
             return Coordinate(x, y - 1);
+        case Direction::SOUTH_WEST:
+            return Coordinate(x - 1, y - 1);
         case Direction::WEST:
             return Coordinate(x - 1, y);
         case Direction::NORTH_WEST:
@@ -88,10 +92,8 @@ Coordinate GraphGameMap::getNeighborCoordinate(int x, int y, Direction dir) cons
 bool GraphGameMap::isValidCoordinate(const Coordinate& coord) const {
     int x = coord.getX();
     int y = coord.getY();
-    int z = -x - y; // Third axial coordinate for hexagonal grid
     
-    // A coordinate is valid if it's within the hexagonal boundary
-    return (std::abs(x) <= mapSize_ && 
-            std::abs(y) <= mapSize_ && 
-            std::abs(z) <= mapSize_);
+    // For octagonal grid, use Chebyshev distance (max of |x|, |y|) <= mapSize
+    // This creates a square boundary which is appropriate for 8-directional movement
+    return (std::abs(x) <= mapSize_ && std::abs(y) <= mapSize_);
 } 
