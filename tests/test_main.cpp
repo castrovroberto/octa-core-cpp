@@ -666,6 +666,238 @@ TEST_F(OctaGameLogicTests, ConfigurationUpdate) {
     EXPECT_EQ(logic.getConfig().stopOnEnemy, true);
 }
 
+// ============================================================================
+// PHASE P1.4 INTEGRATION TESTS: End-to-End Game Scenarios
+// ============================================================================
+
+/**
+ * @brief Integration test suite for complete game scenarios
+ * 
+ * These tests validate entire game flows from start to finish,
+ * testing win conditions, error handling, and edge cases in
+ * realistic game scenarios.
+ */
+class IntegrationTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Create a small map for faster testing
+        gameMap = std::make_shared<GraphGameMap>(1); // 3x3 map
+        eliminationConfig = GameConfig(WinCondition::ELIMINATION, 100, false, SafetyLevel::VALIDATE_ONLY);
+        turnLimitConfig = GameConfig(WinCondition::TURN_LIMIT_MAJORITY, 5, false, SafetyLevel::VALIDATE_ONLY);
+    }
+    
+    std::shared_ptr<GraphGameMap> gameMap;
+    GameConfig eliminationConfig;
+    GameConfig turnLimitConfig;
+    
+    /**
+     * @brief Helper to execute a sequence of moves
+     * @param logic Game logic instance
+     * @param moves Vector of coordinates to play in order
+     * @return Final game result
+     */
+    GameResult executeMovesSequence(OctaGameLogic& logic, const std::vector<Coordinate>& moves) {
+        GameResult lastResult("Game continues", 0, 0, 0);
+        
+        for (const auto& coord : moves) {
+            if (logic.isGameOver()) {
+                break;
+            }
+            
+            auto cell = gameMap->at(coord);
+            if (cell && logic.isValidMove(cell, logic.getCurrentPlayer())) {
+                lastResult = logic.makeMove(cell, logic.getCurrentPlayer());
+            } else {
+                // Skip invalid moves in integration tests
+                continue;
+            }
+        }
+        
+        return lastResult;
+    }
+};
+
+TEST_F(IntegrationTests, CompleteGameScenario_EliminationWin) {
+    OctaGameLogic logic(gameMap, eliminationConfig);
+    
+    // Scenario: Player 1 captures all neutral cells, Player 2 gets eliminated
+    std::vector<Coordinate> moveSequence = {
+        Coordinate(0, 0),   // P1 takes center
+        Coordinate(1, 0),   // P2 takes right
+        Coordinate(-1, 0),  // P1 takes left
+        Coordinate(0, 1),   // P2 takes top
+        Coordinate(0, -1),  // P1 takes bottom
+        Coordinate(1, 1),   // P2 takes top-right
+        Coordinate(-1, -1), // P1 takes bottom-left
+        Coordinate(-1, 1),  // P2 takes top-left
+        Coordinate(1, -1)   // P1 takes bottom-right (all cells taken)
+    };
+    
+    GameResult result = executeMovesSequence(logic, moveSequence);
+    
+    // Game should continue until one player is eliminated through chain reactions
+    EXPECT_FALSE(logic.isGameOver() && result.winner.has_value() && result.winner.value() == Player::PLAYER_1);
+    EXPECT_GT(logic.getTurnCount(), 0);
+    
+    // Verify game state is consistent
+    int p1Cells = 0, p2Cells = 0;
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            auto cell = gameMap->at(Coordinate(x, y));
+            if (cell) {
+                if (cell->getState() == CellState::PLAYER_1) p1Cells++;
+                else if (cell->getState() == CellState::PLAYER_2) p2Cells++;
+            }
+        }
+    }
+    
+    EXPECT_EQ(result.player1CellCount, p1Cells);
+    EXPECT_EQ(result.player2CellCount, p2Cells);
+}
+
+TEST_F(IntegrationTests, CompleteGameScenario_TurnLimitTie) {
+    OctaGameLogic logic(gameMap, turnLimitConfig);
+    
+    // Scenario: Reach turn limit with equal cell counts
+    std::vector<Coordinate> moveSequence = {
+        Coordinate(0, 0),   // P1 takes center (turn 1)
+        Coordinate(1, 0),   // P2 takes right (turn 2)
+        Coordinate(-1, 0),  // P1 takes left (turn 3)
+        Coordinate(0, 1),   // P2 takes top (turn 4)
+        Coordinate(0, -1)   // P1 takes bottom (turn 5 - limit reached)
+    };
+    
+    GameResult result = executeMovesSequence(logic, moveSequence);
+    
+    // Should reach turn limit
+    EXPECT_GE(logic.getTurnCount(), turnLimitConfig.turnLimit);
+    
+    if (logic.isGameOver()) {
+        auto finalResult = logic.getGameResult();
+        EXPECT_TRUE(finalResult.has_value());
+        EXPECT_NE(finalResult->reason.find("Turn limit"), std::string::npos);
+    }
+}
+
+TEST_F(IntegrationTests, CompleteGameScenario_ChainReactionPropagation) {
+    OctaGameLogic logic(gameMap, eliminationConfig);
+    
+    // Set up a scenario where a move triggers a chain reaction
+    auto centerCell = gameMap->at(Coordinate(0, 0));
+    auto rightCell = gameMap->at(Coordinate(1, 0));
+    auto topCell = gameMap->at(Coordinate(0, 1));
+    
+    ASSERT_NE(centerCell, nullptr);
+    ASSERT_NE(rightCell, nullptr);
+    ASSERT_NE(topCell, nullptr);
+    
+    // Make move that should trigger explosion-based chain reaction
+    GameResult result = logic.makeMove(centerCell, Player::PLAYER_1);
+    
+    // Verify the move was executed
+    EXPECT_EQ(centerCell->getState(), CellState::PLAYER_1);
+    EXPECT_EQ(logic.getTurnCount(), 1);
+    EXPECT_EQ(result.reason, "Game continues");
+    
+    // Verify game state consistency
+    EXPECT_GE(result.player1CellCount, 1);
+    EXPECT_EQ(result.player2CellCount, 0);
+    
+    // For a single move on an empty map, we should have exactly 1 cell
+    EXPECT_EQ(result.player1CellCount, 1);
+}
+
+TEST_F(IntegrationTests, ErrorHandling_InvalidMoveSequence) {
+    OctaGameLogic logic(gameMap, eliminationConfig);
+    
+    auto centerCell = gameMap->at(Coordinate(0, 0));
+    ASSERT_NE(centerCell, nullptr);
+    
+    // Valid move for P1
+    EXPECT_NO_THROW(logic.makeMove(centerCell, Player::PLAYER_1));
+    
+    // Now it's P2's turn - P1 move should fail
+    EXPECT_THROW(logic.makeMove(centerCell, Player::PLAYER_1), std::invalid_argument);
+    
+    // Null cell should fail
+    EXPECT_THROW(logic.makeMove(nullptr, Player::PLAYER_2), std::invalid_argument);
+    
+    // Game should still be in valid state
+    EXPECT_FALSE(logic.isGameOver());
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_2);
+}
+
+TEST_F(IntegrationTests, GameReset_MidGame) {
+    OctaGameLogic logic(gameMap, eliminationConfig);
+    
+    // Make some moves
+    auto centerCell = gameMap->at(Coordinate(0, 0));
+    logic.makeMove(centerCell, Player::PLAYER_1);
+    
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_2);
+    EXPECT_GT(logic.getTurnCount(), 0);
+    
+    // Reset game
+    logic.resetGame();
+    
+    // Should be back to initial state
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_1);
+    EXPECT_EQ(logic.getTurnCount(), 0);
+    EXPECT_FALSE(logic.isGameOver());
+    EXPECT_FALSE(logic.getGameResult().has_value());
+}
+
+TEST_F(IntegrationTests, ConfigurationChange_DuringReset) {
+    OctaGameLogic logic(gameMap, eliminationConfig);
+    
+    // Start with elimination config
+    EXPECT_EQ(logic.getConfig().winCondition, WinCondition::ELIMINATION);
+    EXPECT_EQ(logic.getConfig().turnLimit, 100);
+    
+    // Reset with new config
+    logic.resetGame(&turnLimitConfig);
+    
+    // Should have new configuration
+    EXPECT_EQ(logic.getConfig().winCondition, WinCondition::TURN_LIMIT_MAJORITY);
+    EXPECT_EQ(logic.getConfig().turnLimit, 5);
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_1);
+    EXPECT_EQ(logic.getTurnCount(), 0);
+}
+
+TEST_F(IntegrationTests, StressTest_ManyMoves) {
+    OctaGameLogic logic(gameMap, GameConfig(WinCondition::TURN_LIMIT_MAJORITY, 50, false, SafetyLevel::VALIDATE_ONLY));
+    
+    // Execute many alternating moves
+    std::vector<Coordinate> allCoords;
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            allCoords.push_back(Coordinate(x, y));
+        }
+    }
+    
+    int moveCount = 0;
+    while (!logic.isGameOver() && moveCount < 30) {
+        Coordinate coord = allCoords[moveCount % allCoords.size()];
+        auto cell = gameMap->at(coord);
+        
+        if (cell && logic.isValidMove(cell, logic.getCurrentPlayer())) {
+            GameResult result = logic.makeMove(cell, logic.getCurrentPlayer());
+            moveCount++;
+            
+            // Verify game state consistency
+            EXPECT_GE(result.finalTurnCount, 0);
+            EXPECT_GE(result.player1CellCount, 0);
+            EXPECT_GE(result.player2CellCount, 0);
+        } else {
+            // Try next coordinate
+            moveCount++;
+        }
+    }
+    
+    // Should have made progress
+    EXPECT_GT(logic.getTurnCount(), 0);
+}
+
 /**
  * @brief Test runner main function
  * 

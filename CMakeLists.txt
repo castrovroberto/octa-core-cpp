@@ -45,9 +45,7 @@ if(spdlog_FOUND)
 endif()
 
 # Compiler-specific options
-if(MSVC)
-    target_compile_options(octa-core PRIVATE /W4)
-else()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(octa-core PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
@@ -57,6 +55,25 @@ if(OCTA_THREAD_SAFE)
     target_compile_definitions(octa-core PRIVATE OCTA_THREAD_SAFE)
     find_package(Threads REQUIRED)
     target_link_libraries(octa-core PRIVATE Threads::Threads)
+endif()
+
+# Test coverage configuration
+option(ENABLE_COVERAGE "Enable test coverage reporting" OFF)
+if(ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(octa-core PRIVATE --coverage -O0)
+        target_link_libraries(octa-core PRIVATE --coverage)
+        
+        # Add coverage flags to tests as well
+        if(BUILD_TESTS AND TARGET run_tests)
+            target_compile_options(run_tests PRIVATE --coverage -O0)
+            target_link_libraries(run_tests PRIVATE --coverage)
+        endif()
+        
+        message(STATUS "Test coverage enabled")
+    else()
+        message(WARNING "Test coverage is only supported with GCC or Clang")
+    endif()
 endif()
 
 # Testing configuration
@@ -106,7 +123,12 @@ if(BUILD_BENCHMARKS)
         add_executable(
             perf_suite
             bench/benchmark_main.cpp
-            # Benchmark files will be added in Phase P2
+            # Source files needed for benchmarking
+            src/core/GameCell.cpp
+            src/map/GraphGameMap.cpp
+            src/map/ArrayGameMap.cpp
+            src/engine/GameEngine.cpp
+            src/logic/OctaGameLogic.cpp
         )
         
         target_link_libraries(
