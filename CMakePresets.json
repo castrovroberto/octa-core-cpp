@@ -1,0 +1,125 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "dev-debug",
+            "displayName": "Development Debug Build",
+            "description": "Debug configuration for active development",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "BUILD_TESTS": "ON",
+                "BUILD_BENCHMARKS": "OFF",
+                "OCTA_THREAD_SAFE": "OFF"
+            },
+            "toolchainFile": "$env{CONAN_TOOLCHAIN}"
+        },
+        {
+            "name": "dev-release",
+            "displayName": "Development Release Build", 
+            "description": "Release configuration for performance testing",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "BUILD_TESTS": "ON",
+                "BUILD_BENCHMARKS": "ON",
+                "OCTA_THREAD_SAFE": "OFF"
+            },
+            "toolchainFile": "$env{CONAN_TOOLCHAIN}"
+        },
+        {
+            "name": "package-unity",
+            "displayName": "Unity Package Build",
+            "description": "Optimized build for Unity engine package",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Unity",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "BUILD_SHARED_LIBS": "ON",
+                "BUILD_TESTS": "OFF",
+                "BUILD_BENCHMARKS": "OFF",
+                "OCTA_THREAD_SAFE": "ON"
+            },
+            "toolchainFile": "$env{CONAN_TOOLCHAIN}"
+        },
+        {
+            "name": "package-godot",
+            "displayName": "Godot Package Build",
+            "description": "Optimized build for Godot engine package",
+            "generator": "Ninja", 
+            "binaryDir": "${sourceDir}/build/Godot",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "BUILD_SHARED_LIBS": "ON", 
+                "BUILD_TESTS": "OFF",
+                "BUILD_BENCHMARKS": "OFF",
+                "OCTA_THREAD_SAFE": "ON"
+            },
+            "toolchainFile": "$env{CONAN_TOOLCHAIN}"
+        },
+        {
+            "name": "conan-default",
+            "displayName": "Conan Default Configuration",
+            "description": "Default configuration used by Conan",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "toolchainFile": "build/conan_toolchain.cmake"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "dev-debug-build",
+            "displayName": "Build Development Debug",
+            "configurePreset": "dev-debug",
+            "jobs": 0
+        },
+        {
+            "name": "dev-release-build", 
+            "displayName": "Build Development Release",
+            "configurePreset": "dev-release",
+            "jobs": 0
+        },
+        {
+            "name": "package-unity-build",
+            "displayName": "Build Unity Package",
+            "configurePreset": "package-unity",
+            "jobs": 0
+        },
+                {
+            "name": "package-godot-build",
+            "displayName": "Build Godot Package", 
+            "configurePreset": "package-godot",
+            "jobs": 0
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "dev-debug-test",
+            "displayName": "Run Debug Tests",
+            "configurePreset": "dev-debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "dev-release-test",
+            "displayName": "Run Release Tests",
+            "configurePreset": "dev-release", 
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "dev-conan-release",
+            "displayName": "Conan Release Tests (Custom)",
+            "configurePreset": "conan-default",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+} 
