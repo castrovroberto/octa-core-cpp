@@ -68,7 +68,11 @@ if(BUILD_TESTS)
         add_executable(
             run_tests
             tests/test_main.cpp
-            # Test files will be added in Phase P1
+            # Source files needed for testing
+            src/core/GameCell.cpp
+            src/map/GraphGameMap.cpp
+            src/map/ArrayGameMap.cpp
+            src/engine/GameEngine.cpp
         )
         
         target_link_libraries(

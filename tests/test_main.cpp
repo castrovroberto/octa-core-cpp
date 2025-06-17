@@ -1,14 +1,19 @@
 /**
  * @file test_main.cpp
- * @brief Basic test runner for Octa-Core C++ library
+ * @brief Test runner for Octa-Core C++ library
  * 
- * This file provides the main entry point for Google Test.
- * Individual test files will be added in Phase P1.
+ * This file provides the main entry point for Google Test and includes
+ * unit tests for core components developed in Phase P1.
  * 
- * Phase P0: Basic test infrastructure
+ * Phase P1: Core Logic implementation and testing
  */
 
 #include <gtest/gtest.h>
+
+// Include the new core components
+#include "octa-core/core/Enums.h"
+#include "octa-core/core/Direction.h"
+#include "octa-core/core/GameCell.h"
 
 /**
  * @brief Basic placeholder test to verify test infrastructure works
@@ -17,6 +22,300 @@ TEST(PhaseP0Tests, TestInfrastructure) {
     // Basic test to verify Google Test is working
     EXPECT_EQ(1 + 1, 2);
     EXPECT_TRUE(true);
+}
+
+// ============================================================================
+// PHASE P1.1 TESTS: Core Data Models
+// ============================================================================
+
+/**
+ * @brief Test suite for Player and CellState enums
+ */
+class EnumsTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup common test data if needed
+    }
+};
+
+TEST_F(EnumsTests, PlayerEnumValues) {
+    // Test that Player enum has the expected values
+    EXPECT_EQ(static_cast<uint8_t>(Player::PLAYER_1), 0);
+    EXPECT_EQ(static_cast<uint8_t>(Player::PLAYER_2), 1);
+}
+
+TEST_F(EnumsTests, CellStateEnumValues) {
+    // Test that CellState enum has the expected values
+    EXPECT_EQ(static_cast<uint8_t>(CellState::NEUTRAL), 0);
+    EXPECT_EQ(static_cast<uint8_t>(CellState::PLAYER_1), 1);
+    EXPECT_EQ(static_cast<uint8_t>(CellState::PLAYER_2), 2);
+    EXPECT_EQ(static_cast<uint8_t>(CellState::BLOCKED), 3);
+}
+
+TEST_F(EnumsTests, PlayerToCellStateConversion) {
+    // Test conversion from Player to CellState
+    EXPECT_EQ(playerToCellState(Player::PLAYER_1), CellState::PLAYER_1);
+    EXPECT_EQ(playerToCellState(Player::PLAYER_2), CellState::PLAYER_2);
+}
+
+TEST_F(EnumsTests, CellStateToPlayerConversion) {
+    // Test conversion from CellState to Player
+    auto player1 = cellStateToPlayer(CellState::PLAYER_1);
+    auto player2 = cellStateToPlayer(CellState::PLAYER_2);
+    auto neutral = cellStateToPlayer(CellState::NEUTRAL);
+    auto blocked = cellStateToPlayer(CellState::BLOCKED);
+    
+    ASSERT_TRUE(player1.has_value());
+    ASSERT_TRUE(player2.has_value());
+    EXPECT_FALSE(neutral.has_value());
+    EXPECT_FALSE(blocked.has_value());
+    
+    EXPECT_EQ(player1.value(), Player::PLAYER_1);
+    EXPECT_EQ(player2.value(), Player::PLAYER_2);
+}
+
+TEST_F(EnumsTests, GetOpponent) {
+    // Test opponent retrieval
+    EXPECT_EQ(getOpponent(Player::PLAYER_1), Player::PLAYER_2);
+    EXPECT_EQ(getOpponent(Player::PLAYER_2), Player::PLAYER_1);
+}
+
+/**
+ * @brief Test suite for Direction enum and rotation functions
+ */
+class DirectionTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup common test data if needed
+    }
+};
+
+TEST_F(DirectionTests, DirectionEnumValues) {
+    // Test that Direction enum has the expected values
+    EXPECT_EQ(static_cast<uint8_t>(Direction::N), 0);
+    EXPECT_EQ(static_cast<uint8_t>(Direction::NE), 1);
+    EXPECT_EQ(static_cast<uint8_t>(Direction::E), 2);
+    EXPECT_EQ(static_cast<uint8_t>(Direction::SE), 3);
+    EXPECT_EQ(static_cast<uint8_t>(Direction::S), 4);
+    EXPECT_EQ(static_cast<uint8_t>(Direction::SW), 5);
+    EXPECT_EQ(static_cast<uint8_t>(Direction::W), 6);
+    EXPECT_EQ(static_cast<uint8_t>(Direction::NW), 7);
+}
+
+TEST_F(DirectionTests, RotateClockwise) {
+    // Test clockwise rotation for all directions
+    EXPECT_EQ(rotateClockwise(Direction::N), Direction::NE);
+    EXPECT_EQ(rotateClockwise(Direction::NE), Direction::E);
+    EXPECT_EQ(rotateClockwise(Direction::E), Direction::SE);
+    EXPECT_EQ(rotateClockwise(Direction::SE), Direction::S);
+    EXPECT_EQ(rotateClockwise(Direction::S), Direction::SW);
+    EXPECT_EQ(rotateClockwise(Direction::SW), Direction::W);
+    EXPECT_EQ(rotateClockwise(Direction::W), Direction::NW);
+    EXPECT_EQ(rotateClockwise(Direction::NW), Direction::N);
+}
+
+TEST_F(DirectionTests, RotateCounterClockwise) {
+    // Test counter-clockwise rotation for all directions
+    EXPECT_EQ(rotateCounterClockwise(Direction::N), Direction::NW);
+    EXPECT_EQ(rotateCounterClockwise(Direction::NE), Direction::N);
+    EXPECT_EQ(rotateCounterClockwise(Direction::E), Direction::NE);
+    EXPECT_EQ(rotateCounterClockwise(Direction::SE), Direction::E);
+    EXPECT_EQ(rotateCounterClockwise(Direction::S), Direction::SE);
+    EXPECT_EQ(rotateCounterClockwise(Direction::SW), Direction::S);
+    EXPECT_EQ(rotateCounterClockwise(Direction::W), Direction::SW);
+    EXPECT_EQ(rotateCounterClockwise(Direction::NW), Direction::W);
+}
+
+TEST_F(DirectionTests, RotateBySteps) {
+    // Test rotation by multiple steps
+    EXPECT_EQ(rotateBySteps(Direction::N, 2), Direction::E);
+    EXPECT_EQ(rotateBySteps(Direction::N, 4), Direction::S);
+    EXPECT_EQ(rotateBySteps(Direction::E, -1), Direction::NE);
+    EXPECT_EQ(rotateBySteps(Direction::S, -2), Direction::E);  // S(4) - 2 = E(2)
+    
+    // Test wrapping around
+    EXPECT_EQ(rotateBySteps(Direction::N, 8), Direction::N);
+    EXPECT_EQ(rotateBySteps(Direction::N, -8), Direction::N);
+}
+
+TEST_F(DirectionTests, GetOpposite) {
+    // Test opposite direction calculation
+    EXPECT_EQ(getOpposite(Direction::N), Direction::S);
+    EXPECT_EQ(getOpposite(Direction::NE), Direction::SW);
+    EXPECT_EQ(getOpposite(Direction::E), Direction::W);
+    EXPECT_EQ(getOpposite(Direction::SE), Direction::NW);
+    EXPECT_EQ(getOpposite(Direction::S), Direction::N);
+    EXPECT_EQ(getOpposite(Direction::SW), Direction::NE);
+    EXPECT_EQ(getOpposite(Direction::W), Direction::E);
+    EXPECT_EQ(getOpposite(Direction::NW), Direction::SE);
+}
+
+TEST_F(DirectionTests, DirectionToString) {
+    // Test string conversion
+    EXPECT_STREQ(directionToString(Direction::N), "N");
+    EXPECT_STREQ(directionToString(Direction::NE), "NE");
+    EXPECT_STREQ(directionToString(Direction::E), "E");
+    EXPECT_STREQ(directionToString(Direction::SE), "SE");
+    EXPECT_STREQ(directionToString(Direction::S), "S");
+    EXPECT_STREQ(directionToString(Direction::SW), "SW");
+    EXPECT_STREQ(directionToString(Direction::W), "W");
+    EXPECT_STREQ(directionToString(Direction::NW), "NW");
+}
+
+/**
+ * @brief Test suite for GameCell class
+ */
+class GameCellTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Create test coordinates
+        coord1 = Coordinate(0, 0);
+        coord2 = Coordinate(1, 0);
+        coord3 = Coordinate(0, 1);
+        
+        // Create test cells
+        cell1 = std::make_shared<GameCell>(coord1);
+        cell2 = std::make_shared<GameCell>(coord2, CellState::PLAYER_1);
+        cell3 = std::make_shared<GameCell>(coord3, CellState::BLOCKED);
+    }
+    
+    Coordinate coord1, coord2, coord3;
+    std::shared_ptr<GameCell> cell1, cell2, cell3;
+};
+
+TEST_F(GameCellTests, ConstructorAndBasicProperties) {
+    // Test default constructor (NEUTRAL state)
+    EXPECT_EQ(cell1->getCoordinate().getX(), 0);
+    EXPECT_EQ(cell1->getCoordinate().getY(), 0);
+    EXPECT_EQ(cell1->getState(), CellState::NEUTRAL);
+    EXPECT_EQ(cell1->getDirection(), Direction::N);
+    
+    // Test constructor with initial state
+    EXPECT_EQ(cell2->getState(), CellState::PLAYER_1);
+    EXPECT_EQ(cell3->getState(), CellState::BLOCKED);
+}
+
+TEST_F(GameCellTests, StateManagement) {
+    // Test setState and getState
+    cell1->setState(CellState::PLAYER_2);
+    EXPECT_EQ(cell1->getState(), CellState::PLAYER_2);
+    
+    cell1->setState(CellState::NEUTRAL);
+    EXPECT_EQ(cell1->getState(), CellState::NEUTRAL);
+}
+
+TEST_F(GameCellTests, OwnershipQueries) {
+    // Test isOwnedByPlayer
+    EXPECT_FALSE(cell1->isOwnedByPlayer());  // NEUTRAL
+    EXPECT_TRUE(cell2->isOwnedByPlayer());   // PLAYER_1
+    EXPECT_FALSE(cell3->isOwnedByPlayer());  // BLOCKED
+    
+    // Test isOwnedBy
+    EXPECT_FALSE(cell1->isOwnedBy(Player::PLAYER_1));
+    EXPECT_FALSE(cell1->isOwnedBy(Player::PLAYER_2));
+    
+    EXPECT_TRUE(cell2->isOwnedBy(Player::PLAYER_1));
+    EXPECT_FALSE(cell2->isOwnedBy(Player::PLAYER_2));
+    
+    EXPECT_FALSE(cell3->isOwnedBy(Player::PLAYER_1));
+    EXPECT_FALSE(cell3->isOwnedBy(Player::PLAYER_2));
+}
+
+TEST_F(GameCellTests, StateQueries) {
+    // Test isAvailable
+    EXPECT_TRUE(cell1->isAvailable());   // NEUTRAL
+    EXPECT_FALSE(cell2->isAvailable());  // PLAYER_1
+    EXPECT_FALSE(cell3->isAvailable());  // BLOCKED
+    
+    // Test isBlocked
+    EXPECT_FALSE(cell1->isBlocked());    // NEUTRAL
+    EXPECT_FALSE(cell2->isBlocked());    // PLAYER_1
+    EXPECT_TRUE(cell3->isBlocked());     // BLOCKED
+}
+
+TEST_F(GameCellTests, DirectionManagement) {
+    // Test setDirection and getDirection
+    cell1->setDirection(Direction::E);
+    EXPECT_EQ(cell1->getDirection(), Direction::E);
+    
+    cell1->setDirection(Direction::SW);
+    EXPECT_EQ(cell1->getDirection(), Direction::SW);
+}
+
+TEST_F(GameCellTests, NeighborManagement) {
+    // Initially no neighbors
+    EXPECT_EQ(cell1->getValidNeighborCount(), 0);
+    EXPECT_FALSE(cell1->hasNeighbor(Direction::N));
+    EXPECT_EQ(cell1->getNeighbor(Direction::N), nullptr);
+    
+    // Set a neighbor
+    cell1->setNeighbor(Direction::E, cell2);
+    EXPECT_TRUE(cell1->hasNeighbor(Direction::E));
+    EXPECT_EQ(cell1->getValidNeighborCount(), 1);
+    
+    auto neighbor = cell1->getNeighbor(Direction::E);
+    ASSERT_NE(neighbor, nullptr);
+    EXPECT_EQ(neighbor, cell2);
+    
+    // Set another neighbor
+    cell1->setNeighbor(Direction::S, cell3);
+    EXPECT_TRUE(cell1->hasNeighbor(Direction::S));
+    EXPECT_EQ(cell1->getValidNeighborCount(), 2);
+    
+    // Clear a neighbor
+    cell1->clearNeighbor(Direction::E);
+    EXPECT_FALSE(cell1->hasNeighbor(Direction::E));
+    EXPECT_EQ(cell1->getValidNeighborCount(), 1);
+    EXPECT_EQ(cell1->getNeighbor(Direction::E), nullptr);
+}
+
+TEST_F(GameCellTests, ValidNeighbors) {
+    // Set up multiple neighbors
+    cell1->setNeighbor(Direction::N, cell2);
+    cell1->setNeighbor(Direction::E, cell3);
+    
+    auto validNeighbors = cell1->getValidNeighbors();
+    EXPECT_EQ(validNeighbors.size(), 2);
+    
+    // Check that both neighbors are present (order may vary)
+    bool hasCell2 = false, hasCell3 = false;
+    for (const auto& neighbor : validNeighbors) {
+        if (neighbor == cell2) hasCell2 = true;
+        if (neighbor == cell3) hasCell3 = true;
+    }
+    EXPECT_TRUE(hasCell2);
+    EXPECT_TRUE(hasCell3);
+}
+
+TEST_F(GameCellTests, NeighborsInDirections) {
+    // Set up neighbors
+    cell1->setNeighbor(Direction::N, cell2);
+    cell1->setNeighbor(Direction::E, cell3);
+    
+    // Query specific directions
+    std::vector<Direction> queryDirections = {Direction::N, Direction::S, Direction::E};
+    auto neighbors = cell1->getNeighborsInDirections(queryDirections);
+    
+    EXPECT_EQ(neighbors.size(), 3);
+    EXPECT_EQ(neighbors[0], cell2);    // N direction
+    EXPECT_EQ(neighbors[1], nullptr);  // S direction (no neighbor)
+    EXPECT_EQ(neighbors[2], cell3);    // E direction
+}
+
+TEST_F(GameCellTests, WeakPtrBehavior) {
+    // Test that weak_ptr behavior works correctly
+    {
+        auto tempCell = std::make_shared<GameCell>(Coordinate(2, 2));
+        cell1->setNeighbor(Direction::W, tempCell);
+        EXPECT_TRUE(cell1->hasNeighbor(Direction::W));
+        EXPECT_EQ(cell1->getValidNeighborCount(), 1);
+    }
+    // tempCell goes out of scope and should be destroyed
+    
+    // The weak_ptr should now be expired
+    EXPECT_FALSE(cell1->hasNeighbor(Direction::W));
+    EXPECT_EQ(cell1->getValidNeighborCount(), 0);
+    EXPECT_EQ(cell1->getNeighbor(Direction::W), nullptr);
 }
 
 /**

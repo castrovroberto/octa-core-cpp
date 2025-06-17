@@ -68,21 +68,21 @@ Coordinate GraphGameMap::getNeighborCoordinate(int x, int y, Direction dir) cons
     // Octagonal grid neighbor calculations
     // Using standard 8-directional grid with cardinal and diagonal directions
     switch (dir) {
-        case Direction::NORTH:
+        case Direction::N:
             return Coordinate(x, y + 1);
-        case Direction::NORTH_EAST:
+        case Direction::NE:
             return Coordinate(x + 1, y + 1);
-        case Direction::EAST:
+        case Direction::E:
             return Coordinate(x + 1, y);
-        case Direction::SOUTH_EAST:
+        case Direction::SE:
             return Coordinate(x + 1, y - 1);
-        case Direction::SOUTH:
+        case Direction::S:
             return Coordinate(x, y - 1);
-        case Direction::SOUTH_WEST:
+        case Direction::SW:
             return Coordinate(x - 1, y - 1);
-        case Direction::WEST:
+        case Direction::W:
             return Coordinate(x - 1, y);
-        case Direction::NORTH_WEST:
+        case Direction::NW:
             return Coordinate(x - 1, y + 1);
         default:
             return Coordinate(x, y); // Should never happen
