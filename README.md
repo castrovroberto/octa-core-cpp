@@ -234,8 +234,6 @@ scripts/quick.sh check
 
 ## 📦 Integration
 
-## 📦 Integration
-
 ### Game Engine Integration
 
 The library provides clean interfaces for integration:
