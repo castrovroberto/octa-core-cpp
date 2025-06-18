@@ -1,6 +1,6 @@
 # Octa-Core C++
 
-[![Build Status](https://github.com/robertocastro/octa-core-cpp/workflows/CI/badge.svg)](https://github.com/robertocastro/octa-core-cpp/actions)
+[![Build Status](https://github.com/castrovroberto/octa-core-cpp/workflows/CI/badge.svg)](https://github.com/castrovroberto/octa-core-cpp/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A high-performance, modular C++ implementation of the Octa-Core game logic library. This project ports the original Java implementation to modern C++20, providing a lightweight, engine-agnostic SDK suitable for integration with game engines like Godot and Unity.
