@@ -11,7 +11,7 @@
  * utility methods for coordinate operations.
  */
 class Coordinate {
-public:
+  public:
     /**
      * @brief Constructs a coordinate with given x and y values.
      * @param x The x-coordinate
@@ -53,22 +53,18 @@ public:
      * @param other The other coordinate to compare with.
      * @return True if coordinates are equal, false otherwise.
      */
-    bool operator==(const Coordinate& other) const {
-        return x_ == other.x_ && y_ == other.y_;
-    }
+    bool operator==(const Coordinate& other) const { return x_ == other.x_ && y_ == other.y_; }
 
     /**
      * @brief Inequality comparison operator.
      * @param other The other coordinate to compare with.
      * @return True if coordinates are not equal, false otherwise.
      */
-    bool operator!=(const Coordinate& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const Coordinate& other) const { return !(*this == other); }
 
-private:
+  private:
     int x_;
     int y_;
 };
 
-#endif // OCTA_CORE_COORDINATE_H 
+#endif  // OCTA_CORE_COORDINATE_H

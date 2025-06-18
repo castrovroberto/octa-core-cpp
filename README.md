@@ -157,6 +157,83 @@ cmake --build --preset dev-debug --target perf_suite
 ./build/dev-debug/perf_suite
 ```
 
+### Development Scripts
+
+We provide comprehensive development scripts to simplify common tasks:
+
+#### Main Management Script
+
+```bash
+scripts/manage.sh [options] <command>
+```
+
+**Commands:**
+- `install` - Install dependencies with Conan
+- `build` - Configure and build the project
+- `test` - Run unit tests
+- `benchmark` - Run performance benchmarks
+- `coverage` - Generate test coverage report
+- `format` - Format code using clang-format
+- `docs` - Generate documentation with Doxygen
+- `package` - Create distribution packages
+- `clean` - Remove build directories
+- `presets` - List available CMake presets
+- `info` - Show project and environment information
+- `all` - Install deps, configure, build, and test
+
+**Options:**
+- `-p PRESET` - Specify CMake preset (default: dev-debug)
+- `-j JOBS` - Number of parallel build jobs (default: auto)
+- `-v` - Verbose output
+- `-q` - Quiet mode
+- `--shared` - Build shared libraries
+- `--thread-safe` - Enable thread safety
+
+**Examples:**
+```bash
+# Full development cycle
+scripts/manage.sh all
+
+# Release build with benchmarks
+scripts/manage.sh -p dev-release build
+scripts/manage.sh -p dev-release benchmark
+
+# Build packages for engines
+scripts/manage.sh --shared package
+```
+
+#### Quick Development Shortcuts
+
+```bash
+scripts/quick.sh <shortcut>
+```
+
+**Shortcuts:**
+- `dev` - Full development cycle (install + build + test)
+- `release` - Build and test in release mode
+- `bench` - Quick benchmark run (release build)
+- `check` - Quick test run (debug build)
+- `fmt` - Format code
+- `clean` - Clean all build artifacts
+- `pkg` - Build packages for Unity and Godot
+- `cov` - Generate coverage report
+- `docs` - Generate documentation
+
+**Examples:**
+```bash
+# Quick development check
+scripts/quick.sh dev
+
+# Run benchmarks
+scripts/quick.sh bench
+
+# Format and validate
+scripts/quick.sh fmt
+scripts/quick.sh check
+```
+
+## 📦 Integration
+
 ## 📦 Integration
 
 ### Game Engine Integration

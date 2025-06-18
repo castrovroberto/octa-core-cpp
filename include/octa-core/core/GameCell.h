@@ -1,12 +1,12 @@
 /**
  * @file GameCell.h
  * @brief Definition of the GameCell class for the Octa-Core game engine
- * 
+ *
  * This file defines the GameCell class, which represents a single cell
  * in the octagonal game map. Each cell has a coordinate position, a state
  * (neutral, player-owned, or blocked), and maintains weak references to
  * its neighbors in the octagonal grid.
- * 
+ *
  * Refactored in Phase P1.1 to use the new enum system and weak_ptr
  * neighbor references to avoid circular dependencies.
  */
@@ -14,12 +14,14 @@
 #ifndef OCTA_CORE_GAMECELL_H
 #define OCTA_CORE_GAMECELL_H
 
-#include "../model/Coordinate.h"
-#include "Enums.h"
 #include "Direction.h"
+#include "Enums.h"
+
 #include <array>
 #include <memory>
 #include <vector>
+
+#include "../model/Coordinate.h"
 
 // Forward declaration to avoid circular dependencies
 class GameCell;
@@ -32,7 +34,7 @@ class GameCell;
  * availability, and maintains weak references to its neighbors in the
  * octagonal grid. Weak references are used to prevent circular dependencies
  * and simplify memory management.
- * 
+ *
  * Key features:
  * - Uses CellState enum for ownership/availability tracking
  * - Maintains 8 directional neighbors using weak_ptr references
@@ -40,7 +42,7 @@ class GameCell;
  * - Direction-aware neighbor management for octagonal grid navigation
  */
 class GameCell {
-public:
+  public:
     /**
      * @brief Constructor for GameCell.
      * @param coordinate The position of this cell on the map.
@@ -118,7 +120,8 @@ public:
     /**
      * @brief Gets a neighbor in the specified direction.
      * @param direction The direction to look for a neighbor.
-     * @return Shared pointer to the neighbor cell, or nullptr if no neighbor exists or if the weak_ptr has expired.
+     * @return Shared pointer to the neighbor cell, or nullptr if no neighbor exists or if the
+     * weak_ptr has expired.
      */
     std::shared_ptr<GameCell> getNeighbor(Direction direction) const;
 
@@ -139,7 +142,9 @@ public:
      * @brief Gets all neighbors of this cell.
      * @return Array of weak pointers to neighboring cells (may contain expired pointers).
      */
-    const std::array<std::weak_ptr<GameCell>, NUM_DIRECTIONS>& getAllNeighborRefs() const { return neighbors_; }
+    const std::array<std::weak_ptr<GameCell>, NUM_DIRECTIONS>& getAllNeighborRefs() const {
+        return neighbors_;
+    }
 
     /**
      * @brief Gets all valid neighbors (non-expired) of this cell as shared pointers.
@@ -150,9 +155,11 @@ public:
     /**
      * @brief Gets all neighbors in the specified directions.
      * @param directions Vector of directions to check.
-     * @return Vector of shared pointers to neighbor cells (may contain nullptrs for invalid/expired neighbors).
+     * @return Vector of shared pointers to neighbor cells (may contain nullptrs for invalid/expired
+     * neighbors).
      */
-    std::vector<std::shared_ptr<GameCell>> getNeighborsInDirections(const std::vector<Direction>& directions) const;
+    std::vector<std::shared_ptr<GameCell>>
+    getNeighborsInDirections(const std::vector<Direction>& directions) const;
 
     /**
      * @brief Counts the number of valid (non-expired) neighbors.
@@ -167,14 +174,15 @@ public:
      */
     bool hasNeighbor(Direction direction) const;
 
-private:
-    Coordinate coordinate_;                                        ///< Position of this cell on the map
-    CellState state_;                                             ///< Current state/ownership of the cell
-    Direction direction_;                                         ///< Current direction property for this cell
-    int value_;                                                   ///< Current value/energy level of the cell
-    std::array<std::weak_ptr<GameCell>, NUM_DIRECTIONS> neighbors_; ///< Neighbors in all 8 directions
+  private:
+    Coordinate coordinate_;  ///< Position of this cell on the map
+    CellState state_;        ///< Current state/ownership of the cell
+    Direction direction_;    ///< Current direction property for this cell
+    int value_;              ///< Current value/energy level of the cell
+    std::array<std::weak_ptr<GameCell>, NUM_DIRECTIONS>
+        neighbors_;  ///< Neighbors in all 8 directions
 
     static constexpr size_t NUM_DIRECTIONS = 8;
 };
 
-#endif // OCTA_CORE_GAMECELL_H 
+#endif  // OCTA_CORE_GAMECELL_H

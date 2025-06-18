@@ -1,10 +1,10 @@
 /**
  * @file GameCell.cpp
  * @brief Implementation of the GameCell class for the Octa-Core game engine
- * 
+ *
  * This file implements the GameCell class methods, providing functionality
  * for managing cell state, neighbor relationships, and octagonal grid navigation.
- * 
+ *
  * Refactored in Phase P1.1 to use the new enum system and weak_ptr
  * neighbor references.
  */
@@ -50,24 +50,25 @@ void GameCell::clearNeighbor(Direction direction) {
 std::vector<std::shared_ptr<GameCell>> GameCell::getValidNeighbors() const {
     std::vector<std::shared_ptr<GameCell>> validNeighbors;
     validNeighbors.reserve(NUM_DIRECTIONS);  // Pre-allocate for efficiency
-    
+
     for (const auto& weakNeighbor : neighbors_) {
         if (auto sharedNeighbor = weakNeighbor.lock()) {
             validNeighbors.push_back(sharedNeighbor);
         }
     }
-    
+
     return validNeighbors;
 }
 
-std::vector<std::shared_ptr<GameCell>> GameCell::getNeighborsInDirections(const std::vector<Direction>& directions) const {
+std::vector<std::shared_ptr<GameCell>>
+GameCell::getNeighborsInDirections(const std::vector<Direction>& directions) const {
     std::vector<std::shared_ptr<GameCell>> neighbors;
     neighbors.reserve(directions.size());
-    
+
     for (Direction direction : directions) {
         neighbors.push_back(getNeighbor(direction));
     }
-    
+
     return neighbors;
 }
 
@@ -87,4 +88,4 @@ bool GameCell::hasNeighbor(Direction direction) const {
         return !neighbors_[index].expired();
     }
     return false;
-} 
+}

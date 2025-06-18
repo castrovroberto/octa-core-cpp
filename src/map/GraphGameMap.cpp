@@ -1,18 +1,19 @@
 /**
  * @file GraphGameMap.cpp
  * @brief Implementation of the GraphGameMap class
- * 
+ *
  * This file implements the GraphGameMap class methods, providing a hash map-based
  * implementation of the IGameMap interface. The implementation handles octagonal
  * grid initialization, neighbor linking, and efficient coordinate-based lookups.
- * 
+ *
  * Updated in Phase P1.2 to implement the new SRD v3.2 interface specification
  * and work with the refactored GameCell class.
  */
 
 #include "octa-core/map/GraphGameMap.h"
-#include <cmath>
+
 #include <algorithm>
+#include <cmath>
 
 GraphGameMap::GraphGameMap(int size) : mapSize_(size) {
     initializeMap();
@@ -30,7 +31,7 @@ size_t GraphGameMap::size() const {
 bool GraphGameMap::isValidCoordinate(const Coordinate& coord) const {
     int x = coord.getX();
     int y = coord.getY();
-    
+
     // For octagonal grid, use Chebyshev distance (max of |x|, |y|) <= mapSize
     // This creates a square boundary which is appropriate for 8-directional movement
     return (std::abs(x) <= mapSize_ && std::abs(y) <= mapSize_);
@@ -47,7 +48,7 @@ void GraphGameMap::initializeMap() {
             }
         }
     }
-    
+
     // Then link neighbors using weak_ptr references
     for (const auto& pair : cells_) {
         linkCellNeighbors(pair.second);
@@ -58,12 +59,12 @@ void GraphGameMap::linkCellNeighbors(const std::shared_ptr<GameCell>& cell) {
     const Coordinate& coord = cell->getCoordinate();
     int x = coord.getX();
     int y = coord.getY();
-    
+
     // Link all 8 octagonal directions
     for (int dir = 0; dir < 8; ++dir) {
         Direction direction = static_cast<Direction>(dir);
         Coordinate neighborCoord = getNeighborCoordinate(x, y, direction);
-        
+
         auto neighborIt = cells_.find(neighborCoord);
         if (neighborIt != cells_.end()) {
             // Set neighbor using the new GameCell API
@@ -93,6 +94,6 @@ Coordinate GraphGameMap::getNeighborCoordinate(int x, int y, Direction dir) cons
         case Direction::NW:
             return Coordinate(x - 1, y + 1);
         default:
-            return Coordinate(x, y); // Should never happen
+            return Coordinate(x, y);  // Should never happen
     }
-} 
+}

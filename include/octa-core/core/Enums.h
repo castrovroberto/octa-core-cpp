@@ -1,12 +1,12 @@
 /**
  * @file Enums.h
  * @brief Core enumerations for the Octa-Core game engine
- * 
+ *
  * This file defines the fundamental enum types used throughout the game:
  * - CellState: Represents the ownership/state of a game cell
  * - Player: Represents the two players in the game
- * 
- * These enums are specified in SRD v3.2 and form the foundation for 
+ *
+ * These enums are specified in SRD v3.2 and form the foundation for
  * the game's state management system.
  */
 
@@ -19,11 +19,11 @@
 /**
  * @enum CellState
  * @brief Defines the state/ownership of a game cell
- * 
+ *
  * Each cell on the game map can be in one of four states:
  * - NEUTRAL: Unowned, can be captured by either player
  * - PLAYER_1: Owned by Player 1
- * - PLAYER_2: Owned by Player 2  
+ * - PLAYER_2: Owned by Player 2
  * - BLOCKED: Permanently blocked, cannot be captured
  */
 enum class CellState : uint8_t {
@@ -36,7 +36,7 @@ enum class CellState : uint8_t {
 /**
  * @enum Player
  * @brief Represents the two players in the game
- * 
+ *
  * The game supports exactly two players who alternate turns.
  * This enum is used for turn management and ownership validation.
  */
@@ -87,4 +87,4 @@ inline Player getOpponent(Player player) {
     return (player == Player::PLAYER_1) ? Player::PLAYER_2 : Player::PLAYER_1;
 }
 
-#endif // OCTA_CORE_ENUMS_H 
+#endif  // OCTA_CORE_ENUMS_H
