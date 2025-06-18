@@ -25,6 +25,7 @@ add_executable(
     octa-core
     src/Main.cpp
     src/core/GameCell.cpp
+    src/core/CellChange.cpp
     src/map/GraphGameMap.cpp
     src/map/ArrayGameMap.cpp
     src/engine/GameEngine.cpp
@@ -88,6 +89,7 @@ if(BUILD_TESTS)
             tests/test_main.cpp
             # Source files needed for testing
             src/core/GameCell.cpp
+            src/core/CellChange.cpp
             src/map/GraphGameMap.cpp
             src/map/ArrayGameMap.cpp
             src/engine/GameEngine.cpp
@@ -125,6 +127,7 @@ if(BUILD_BENCHMARKS)
             bench/benchmark_main.cpp
             # Source files needed for benchmarking
             src/core/GameCell.cpp
+            src/core/CellChange.cpp
             src/map/GraphGameMap.cpp
             src/map/ArrayGameMap.cpp
             src/engine/GameEngine.cpp

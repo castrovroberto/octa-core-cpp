@@ -70,14 +70,7 @@ struct CellChange {
      *
      * @throws std::runtime_error if the cell pointer is invalid
      */
-    void restore() const {
-        if (!isValid()) {
-            throw std::runtime_error("CellChange: cannot restore - invalid cell pointer");
-        }
-
-        cell->setState(oldState);
-        cell->setDirection(oldDirection);
-    }
+    void restore() const;
 };
 
 #endif  // OCTA_CORE_CELLCHANGE_H
