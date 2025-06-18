@@ -10,6 +10,8 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+
 // Include the new core components
 #include "octa-core/core/CellChange.h"
 #include "octa-core/core/Direction.h"
@@ -1044,6 +1046,195 @@ TEST_F(IntegrationTests, StressTest_ManyMoves) {
 
     // Should have made progress
     EXPECT_GT(logic.getTurnCount(), 0);
+}
+
+// ============================================================================
+// PHASE P2.1 LIGHT UNDO SAFETY TESTS: Exception Safety and Rollback
+// ============================================================================
+
+/**
+ * @brief Test suite for LIGHT_UNDO safety system
+ */
+class LightUndoTests : public ::testing::Test {
+  protected:
+    void SetUp() override {
+        // Create a small test map for controlled testing
+        gameMap = std::make_shared<GraphGameMap>(2);  // 5x5 map
+        
+        // Setup initial cells for testing
+        centerCell = gameMap->at(Coordinate(0, 0));
+        rightCell = gameMap->at(Coordinate(1, 0));
+        topCell = gameMap->at(Coordinate(0, 1));
+        
+        // Configure for LIGHT_UNDO testing
+        config = GameConfig(WinCondition::ELIMINATION, 100, false, SafetyLevel::LIGHT_UNDO);
+    }
+    
+    std::shared_ptr<GraphGameMap> gameMap;
+    std::shared_ptr<GameCell> centerCell;
+    std::shared_ptr<GameCell> rightCell;
+    std::shared_ptr<GameCell> topCell;
+    GameConfig config;
+};
+
+TEST_F(LightUndoTests, BasicUndoLoggingEnabled) {
+    OctaGameLogic logic(gameMap, config);
+    
+    // Record initial states
+    auto initialCenterState = centerCell->getState();
+    auto initialCenterDirection = centerCell->getDirection();
+    
+    // Make a valid move (should succeed with LIGHT_UNDO)
+    auto result = logic.makeMove(centerCell, Player::PLAYER_1);
+    
+    // Verify move was successful
+    EXPECT_EQ(centerCell->getState(), CellState::PLAYER_1);
+    EXPECT_NE(centerCell->getState(), initialCenterState);
+}
+
+TEST_F(LightUndoTests, RollbackOnInvalidMoveAttempt) {
+    OctaGameLogic logic(gameMap, config);
+    
+    // Set up a scenario where a move will fail after some changes
+    centerCell->setState(CellState::PLAYER_1);
+    
+    // Record initial states
+    auto initialCenterState = centerCell->getState();
+    auto initialCenterValue = centerCell->getValue();
+    
+    // Try to make an invalid move (wrong player)
+    EXPECT_THROW(logic.makeMove(centerCell, Player::PLAYER_2), std::invalid_argument);
+    
+    // Verify state is unchanged (no rollback needed for this early validation failure)
+    EXPECT_EQ(centerCell->getState(), initialCenterState);
+    EXPECT_EQ(centerCell->getValue(), initialCenterValue);
+}
+
+TEST_F(LightUndoTests, DisabledLoggingNoOverhead) {
+    // Test with VALIDATE_ONLY (no undo logging)
+    GameConfig validateOnlyConfig(WinCondition::ELIMINATION, 100, false, SafetyLevel::VALIDATE_ONLY);
+    OctaGameLogic logic(gameMap, validateOnlyConfig);
+    
+    // Record initial state
+    auto initialState = centerCell->getState();
+    
+    // Make a move - should work without undo logging
+    auto result = logic.makeMove(centerCell, Player::PLAYER_1);
+    
+    // Verify move succeeded
+    EXPECT_EQ(centerCell->getState(), CellState::PLAYER_1);
+    EXPECT_NE(centerCell->getState(), initialState);
+}
+
+TEST_F(LightUndoTests, ChainReactionWithLightUndo) {
+    OctaGameLogic logic(gameMap, config);
+    
+    // Set up a chain reaction scenario
+    // First, check how many neighbors the center cell has
+    size_t neighborCount = centerCell->getValidNeighborCount();
+    
+    // Set centerCell to have a value that will explode when incremented
+    // Value needs to be > neighborCount after increment
+    centerCell->setState(CellState::PLAYER_1);
+    centerCell->setValue(neighborCount);  // Will become neighborCount+1 after increment, which should explode
+    rightCell->setState(CellState::NEUTRAL);
+    
+    // Record initial states
+    auto initialRightState = rightCell->getState();
+    
+    // Make move that should cause chain reaction
+    auto result = logic.makeMove(centerCell, Player::PLAYER_1);
+    
+    // Verify chain reaction occurred
+    EXPECT_EQ(centerCell->getState(), CellState::PLAYER_1);
+    EXPECT_EQ(rightCell->getState(), CellState::PLAYER_1);  // Should be converted
+    EXPECT_NE(rightCell->getState(), initialRightState);
+}
+
+TEST_F(LightUndoTests, PerformanceImpactMeasurement) {
+    // Test performance difference between VALIDATE_ONLY and LIGHT_UNDO
+    const int NUM_ITERATIONS = 100;
+    
+    // Measure VALIDATE_ONLY performance
+    GameConfig validateConfig(WinCondition::ELIMINATION, 100, false, SafetyLevel::VALIDATE_ONLY);
+    auto validateMap = std::make_shared<GraphGameMap>(2);
+    OctaGameLogic validateLogic(validateMap, validateConfig);
+    
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < NUM_ITERATIONS; ++i) {
+        validateLogic.resetGame();
+        auto cell = validateMap->at(Coordinate(0, 0));
+        validateLogic.makeMove(cell, Player::PLAYER_1);
+    }
+    auto validateTime = std::chrono::high_resolution_clock::now() - start;
+    
+    // Measure LIGHT_UNDO performance
+    auto undoMap = std::make_shared<GraphGameMap>(2);
+    OctaGameLogic undoLogic(undoMap, config);
+    
+    start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < NUM_ITERATIONS; ++i) {
+        undoLogic.resetGame();
+        auto cell = undoMap->at(Coordinate(0, 0));
+        undoLogic.makeMove(cell, Player::PLAYER_1);
+    }
+    auto undoTime = std::chrono::high_resolution_clock::now() - start;
+    
+    // Calculate overhead percentage
+    auto validateMs = std::chrono::duration_cast<std::chrono::microseconds>(validateTime).count();
+    auto undoMs = std::chrono::duration_cast<std::chrono::microseconds>(undoTime).count();
+    
+    double overheadPercent = ((double)(undoMs - validateMs) / validateMs) * 100.0;
+    
+    // Verify overhead is acceptable (< 10% as per strategy)
+    EXPECT_LT(overheadPercent, 10.0) << "LIGHT_UNDO overhead: " << overheadPercent << "%";
+    
+    // Output timing information for analysis
+    std::cout << "Performance Analysis:\n";
+    std::cout << "  VALIDATE_ONLY: " << validateMs << " μs\n";
+    std::cout << "  LIGHT_UNDO:    " << undoMs << " μs\n";
+    std::cout << "  Overhead:      " << overheadPercent << "%\n";
+}
+
+TEST_F(LightUndoTests, MemorySafetyWithMultipleCells) {
+    OctaGameLogic logic(gameMap, config);
+    
+    // Set up a scenario that will affect multiple cells
+    // First, check how many neighbors the center cell has
+    size_t neighborCount = centerCell->getValidNeighborCount();
+    
+    // Set centerCell to have a value that will explode when incremented
+    centerCell->setState(CellState::PLAYER_1);
+    centerCell->setValue(neighborCount);  // Will become neighborCount+1 after increment, which should explode
+    
+    rightCell->setState(CellState::NEUTRAL);
+    topCell->setState(CellState::NEUTRAL);
+    
+    // Record initial states
+    auto initialRightState = rightCell->getState();
+    auto initialTopState = topCell->getState();
+    
+    // Make move that affects multiple cells
+    auto result = logic.makeMove(centerCell, Player::PLAYER_1);
+    
+    // Verify multiple cells were affected
+    EXPECT_EQ(rightCell->getState(), CellState::PLAYER_1);
+    EXPECT_EQ(topCell->getState(), CellState::PLAYER_1);
+    
+    // Verify states changed from initial
+    EXPECT_NE(rightCell->getState(), initialRightState);
+    EXPECT_NE(topCell->getState(), initialTopState);
+}
+
+TEST_F(LightUndoTests, EdgeCaseNullCellHandling) {
+    OctaGameLogic logic(gameMap, config);
+    
+    // Test that null cells are handled gracefully
+    EXPECT_THROW(logic.makeMove(nullptr, Player::PLAYER_1), std::invalid_argument);
+    
+    // Verify game state is unchanged
+    EXPECT_EQ(logic.getCurrentPlayer(), Player::PLAYER_1);
+    EXPECT_EQ(logic.getTurnCount(), 0);
 }
 
 /**

@@ -20,6 +20,9 @@
 
 #include "../map/IGameMap.h"
 
+// Forward declaration for LIGHT_UNDO system
+struct CellChange;
+
 /**
  * @class OctaGameLogic
  * @brief Concrete implementation of Octa-Core game logic
@@ -100,6 +103,7 @@ class OctaGameLogic : public IGameLogic {
      * @brief Executes the chain reaction algorithm starting from a cell
      * @param startCell The cell where the chain reaction begins
      * @param player The player making the move
+     * @param undoLog Vector to record cell changes for LIGHT_UNDO system
      * @return Vector of cells that were affected by the chain reaction
      *
      * This method implements the core chain reaction mechanics:
@@ -110,9 +114,12 @@ class OctaGameLogic : public IGameLogic {
      *
      * The algorithm uses breadth-first search to ensure fair propagation
      * and respects the stopOnEnemy configuration setting.
+     *
+     * For LIGHT_UNDO safety, records all cell modifications in undoLog.
      */
     std::vector<std::shared_ptr<GameCell>> executeChainReaction(std::shared_ptr<GameCell> startCell,
-                                                                Player player);
+                                                                Player player,
+                                                                std::vector<CellChange>& undoLog);
 
     /**
      * @brief Checks if a cell should explode based on its value and neighbors
@@ -129,6 +136,7 @@ class OctaGameLogic : public IGameLogic {
      * @param cell The cell to explode
      * @param player The player who owns the explosion
      * @param affectedCells Vector to track cells affected by the explosion
+     * @param undoLog Vector to record cell changes for LIGHT_UNDO system
      *
      * This method:
      * 1. Resets the exploding cell to value 0
@@ -137,9 +145,11 @@ class OctaGameLogic : public IGameLogic {
      * 4. Tracks all affected cells for further chain reaction processing
      *
      * Respects the stopOnEnemy configuration setting.
+     * For LIGHT_UNDO safety, records all cell modifications in undoLog.
      */
     void explodeCell(std::shared_ptr<GameCell> cell, Player player,
-                     std::vector<std::shared_ptr<GameCell>>& affectedCells);
+                     std::vector<std::shared_ptr<GameCell>>& affectedCells,
+                     std::vector<CellChange>& undoLog);
 
     /**
      * @brief Checks all win conditions and updates game state
@@ -173,6 +183,20 @@ class OctaGameLogic : public IGameLogic {
      * and throws descriptive error messages for invalid settings.
      */
     void validateConfig(const GameConfig& config) const;
+
+    /**
+     * @brief Records a cell's current state for potential rollback
+     * @param undoLog Vector to store the cell change record
+     * @param cell The cell whose state should be recorded
+     *
+     * This method is used by the LIGHT_UNDO safety system to record
+     * cell states before modification. Only records if the safety level
+     * is set to LIGHT_UNDO to minimize performance overhead.
+     *
+     * Part of Phase P2.1.2 implementation.
+     */
+    void recordCellChange(std::vector<CellChange>& undoLog, 
+                         std::shared_ptr<GameCell> cell) const;
 
     /**
      * @brief Initializes game state to starting conditions

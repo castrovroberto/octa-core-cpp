@@ -16,6 +16,7 @@
 #include <stdexcept>
 
 #include "../../include/octa-core/core/Direction.h"
+#include "../../include/octa-core/core/CellChange.h"
 
 OctaGameLogic::OctaGameLogic(std::shared_ptr<IGameMap> gameMap, const GameConfig& config)
     : gameMap_(gameMap), config_(config), gameOver_(false) {
@@ -63,29 +64,46 @@ GameResult OctaGameLogic::makeMove(std::shared_ptr<GameCell> cell, Player player
         throw std::invalid_argument(oss.str());
     }
 
-    // Execute the chain reaction
-    std::vector<std::shared_ptr<GameCell>> affectedCells = executeChainReaction(cell, player);
+    // Initialize undo log for LIGHT_UNDO safety system
+    std::vector<CellChange> undoLog;
+    
+    try {
+        // Execute the chain reaction with undo logging
+        std::vector<std::shared_ptr<GameCell>> affectedCells = executeChainReaction(cell, player, undoLog);
 
-    // Switch to next player
-    switchPlayer();
+        // Switch to next player
+        switchPlayer();
 
-    // Increment turn count after each move (not just after both players move)
-    // This gives us a more granular turn count for better game tracking
-    turnCount_++;
+        // Increment turn count after each move (not just after both players move)
+        // This gives us a more granular turn count for better game tracking
+        turnCount_++;
 
-    // Check for win conditions
-    auto result = checkWinConditions();
-    if (result.has_value()) {
-        gameResult_ = result;
-        gameOver_ = true;
-        return result.value();
+        // Check for win conditions
+        auto result = checkWinConditions();
+        if (result.has_value()) {
+            gameResult_ = result;
+            gameOver_ = true;
+            return result.value();
+        }
+
+        // Return current game state
+        int p1Cells = countPlayerCells(Player::PLAYER_1);
+        int p2Cells = countPlayerCells(Player::PLAYER_2);
+
+        return GameResult("Game continues", turnCount_, p1Cells, p2Cells);
+    } catch (const std::exception& e) {
+        // LIGHT_UNDO rollback: restore cells in reverse order
+        if (config_.safetyLevel == SafetyLevel::LIGHT_UNDO) {
+            for (auto it = undoLog.rbegin(); it != undoLog.rend(); ++it) {
+                if (it->isValid()) {
+                    it->restore();
+                }
+            }
+        }
+        
+        // Re-throw the original exception after cleanup
+        throw;
     }
-
-    // Return current game state
-    int p1Cells = countPlayerCells(Player::PLAYER_1);
-    int p2Cells = countPlayerCells(Player::PLAYER_2);
-
-    return GameResult("Game continues", turnCount_, p1Cells, p2Cells);
 }
 
 bool OctaGameLogic::isGameOver() const {
@@ -143,10 +161,13 @@ void OctaGameLogic::resetGame(const GameConfig* newConfig) {
 }
 
 std::vector<std::shared_ptr<GameCell>>
-OctaGameLogic::executeChainReaction(std::shared_ptr<GameCell> startCell, Player player) {
+OctaGameLogic::executeChainReaction(std::shared_ptr<GameCell> startCell, Player player, std::vector<CellChange>& undoLog) {
     std::vector<std::shared_ptr<GameCell>> affectedCells;
     std::queue<std::shared_ptr<GameCell>> explosionQueue;
 
+    // Record the starting cell's state before modification (LIGHT_UNDO)
+    recordCellChange(undoLog, startCell);
+    
     // Set the starting cell to the player's ownership and increment its value
     startCell->setState(playerToCellState(player));
     startCell->setValue(startCell->getValue() + 1);
@@ -165,7 +186,7 @@ OctaGameLogic::executeChainReaction(std::shared_ptr<GameCell> startCell, Player 
         // Only explode if the cell is still unstable (might have been stabilized by another
         // explosion)
         if (shouldExplode(currentCell)) {
-            explodeCell(currentCell, player, affectedCells);
+            explodeCell(currentCell, player, affectedCells, undoLog);
 
             // Check all affected neighbors for further explosions
             for (Direction dir = Direction::N; dir <= Direction::NW;
@@ -187,13 +208,16 @@ bool OctaGameLogic::shouldExplode(std::shared_ptr<const GameCell> cell) const {
         return false;
     }
 
-    return cell->getValue() > cell->getValidNeighborCount();
+    return static_cast<size_t>(cell->getValue()) > cell->getValidNeighborCount();
 }
 
 void OctaGameLogic::explodeCell(std::shared_ptr<GameCell> cell, Player player,
-                                std::vector<std::shared_ptr<GameCell>>& affectedCells) {
-    int explosionValue = cell->getValue();
+                                std::vector<std::shared_ptr<GameCell>>& affectedCells,
+                                std::vector<CellChange>& undoLog) {
     CellState playerState = playerToCellState(player);
+
+    // Record the exploding cell's state before modification (LIGHT_UNDO)
+    recordCellChange(undoLog, cell);
 
     // Reset the exploding cell
     cell->setValue(0);
@@ -212,6 +236,9 @@ void OctaGameLogic::explodeCell(std::shared_ptr<GameCell> cell, Player player,
             neighbor->getState() != playerState) {
             continue;  // Skip enemy cells if stopOnEnemy is true
         }
+
+        // Record the neighbor's state before modification (LIGHT_UNDO)
+        recordCellChange(undoLog, neighbor);
 
         // Convert neighbor to current player and add energy
         neighbor->setState(playerState);
@@ -299,6 +326,13 @@ void OctaGameLogic::validateConfig(const GameConfig& config) const {
 
     if (config.winCondition == WinCondition::TURN_LIMIT_MAJORITY && config.turnLimit < 1) {
         throw std::invalid_argument("Turn limit majority requires at least 1 turn");
+    }
+}
+
+void OctaGameLogic::recordCellChange(std::vector<CellChange>& undoLog, 
+                                     std::shared_ptr<GameCell> cell) const {
+    if (config_.safetyLevel == SafetyLevel::LIGHT_UNDO && cell) {
+        undoLog.emplace_back(cell, cell->getState(), cell->getDirection());
     }
 }
 
