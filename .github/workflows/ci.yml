@@ -63,7 +63,7 @@ jobs:
     - name: Install dependencies
       run: |
         conan install . --build=missing -s build_type=${{ env.BUILD_TYPE }} \
-          -o enable_testing=True -o enable_benchmarks=False
+          -o enable_testing=True -o enable_benchmarks=True
 
     - name: Configure CMake
       run: |
@@ -76,6 +76,60 @@ jobs:
     - name: Run unit tests
       run: |
         ctest --preset conan-release --output-on-failure
+
+    # Performance benchmark execution
+    - name: Run performance benchmarks
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        ./build/build/Release/perf_suite \
+          --benchmark_format=json \
+          --benchmark_out=${{ github.workspace }}/benchmark_results.json \
+          --benchmark_repetitions=3 \
+          --benchmark_report_aggregates_only=true \
+          --benchmark_time_unit=us
+
+    - name: Display benchmark summary
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        echo "=== Performance Benchmark Summary ==="
+        ./build/build/Release/perf_suite \
+          --benchmark_filter="BM_MakeMove_(Short|Medium|Long)Chain|BM_SafetyLevel_Comparison" \
+          --benchmark_repetitions=1
+
+    - name: Upload benchmark results
+      if: matrix.config.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results-${{ github.sha }}
+        path: benchmark_results.json
+        retention-days: 30
+
+    - name: Performance regression check
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        echo "=== Performance Regression Analysis ==="
+        # Compare against baseline if it exists
+        if [ -f "baseline_performance.json" ]; then
+          echo "Baseline found - performing regression analysis"
+          python3 scripts/compare_benchmarks.py \
+            baseline_performance.json \
+            benchmark_results.json \
+            --output regression_report.txt \
+            --exit-on-regression
+        else
+          echo "No baseline found - establishing new baseline"
+          echo "Current results will be used as future baseline"
+        fi
+
+    - name: Upload regression analysis
+      if: matrix.config.os == 'ubuntu-latest' && failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: regression-analysis-${{ github.sha }}
+        path: |
+          regression_report.txt
+          benchmark_results.json
+        retention-days: 90
 
     # Linux-specific steps
     - name: Install Valgrind (Linux)
@@ -125,6 +179,79 @@ jobs:
       run: |
         sudo apt-get install -y clang-tidy
         echo "clang-tidy will be integrated in Phase P1"
+
+  performance-monitoring:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Conan
+      run: |
+        python -m pip install --upgrade pip
+        pip install "conan>=2.0"
+
+    - name: Configure Conan profile
+      run: |
+        conan profile detect --force
+
+    - name: Install dependencies with benchmarks
+      run: |
+        conan install . --build=missing -s build_type=Release \
+          -o enable_testing=True -o enable_benchmarks=True
+
+    - name: Configure CMake
+      run: |
+        cmake --preset conan-default -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build with optimizations
+      run: |
+        cmake --build --preset conan-release --parallel
+
+    - name: Extended performance benchmark suite
+      run: |
+        echo "=== Extended Performance Analysis ==="
+        ./build/build/Release/perf_suite \
+          --benchmark_format=json \
+          --benchmark_out=extended_performance.json \
+          --benchmark_repetitions=5 \
+          --benchmark_report_aggregates_only=true \
+          --benchmark_time_unit=us
+
+    - name: Performance summary report
+      run: |
+        echo "=== Performance Summary Report ==="
+        echo "Generated: $(date)" > performance_summary.txt
+        echo "Commit: ${{ github.sha }}" >> performance_summary.txt
+        echo "Branch: ${{ github.ref_name }}" >> performance_summary.txt
+        echo "" >> performance_summary.txt
+        echo "Core Performance Metrics:" >> performance_summary.txt
+        ./build/build/Release/perf_suite \
+          --benchmark_filter="BM_MakeMove_(Short|Medium|Long)Chain" \
+          --benchmark_repetitions=3 | grep -E "BM_MakeMove_.*Chain" >> performance_summary.txt
+        echo "" >> performance_summary.txt
+        echo "Safety System Overhead:" >> performance_summary.txt
+        ./build/build/Release/perf_suite \
+          --benchmark_filter="BM_SafetyLevel_Comparison" \
+          --benchmark_repetitions=3 | grep -E "BM_SafetyLevel_Comparison" >> performance_summary.txt
+        cat performance_summary.txt
+
+    - name: Upload extended performance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-monitoring-${{ github.sha }}
+        path: |
+          extended_performance.json
+          performance_summary.txt
+        retention-days: 90
 
   documentation:
     name: Documentation Build
