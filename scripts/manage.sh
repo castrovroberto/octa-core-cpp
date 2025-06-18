@@ -30,6 +30,8 @@ cd "$ROOT_DIR"
 
 # Available presets from CMakePresets.json
 readonly AVAILABLE_PRESETS=(
+    "conan-debug"
+    "conan-release"
     "dev-debug"
     "dev-release" 
     "package-unity"
@@ -77,19 +79,23 @@ usage() {
     printf "  %sall%s          Install deps, configure, build, and test\n\n" "${WHITE}" "${NC}"
     
     printf "%sOptions:%s\n" "${CYAN}" "${NC}"
-    printf "  %s-p PRESET%s    Specify CMake configure preset (default: dev-debug)\n" "${WHITE}" "${NC}"
+    printf "  %s-p PRESET%s    Specify CMake configure preset (default: auto-detect)\n" "${WHITE}" "${NC}"
     printf "  %s-j JOBS%s      Number of parallel build jobs (default: auto)\n" "${WHITE}" "${NC}"
     printf "  %s-v%s           Verbose output\n" "${WHITE}" "${NC}"
     printf "  %s-q%s           Quiet mode (minimal output)\n" "${WHITE}" "${NC}"
     printf "  %s--shared%s     Build shared libraries\n" "${WHITE}" "${NC}"
     printf "  %s--thread-safe%s Enable thread safety\n" "${WHITE}" "${NC}"
+    printf "  %s--benchmarks%s  Force enable benchmarks\n" "${WHITE}" "${NC}"
     printf "  %s-h%s           Show this help\n\n" "${WHITE}" "${NC}"
     
     printf "%sAvailable Presets:%s\n" "${CYAN}" "${NC}"
-    for preset in "${AVAILABLE_PRESETS[@]}"; do
-        printf "  %s\n" "$preset"
-    done
+    printf "  %sConan-generated presets (preferred when available):%s\n" "${GREEN}" "${NC}"
+    printf "    conan-debug, conan-release\n"
+    printf "  %sManual presets:%s\n" "${GREEN}" "${NC}"
+    printf "    dev-debug, dev-release, package-unity, package-godot, conan-default\n"
     printf "\n"
+    printf "%sNote:%s The script auto-detects the best preset based on your Conan setup.\n" "${YELLOW}" "${NC}"
+    printf "Conan-generated presets are preferred as they use the correct compiler toolchain.\n\n"
     
     printf "%sExamples:%s\n" "${CYAN}" "${NC}"
     printf "  %s build                    # Build with default preset\n" "$SCRIPT_NAME"
@@ -116,23 +122,101 @@ check_dependencies() {
     fi
 }
 
-# Validate preset
-validate_preset() {
+# Function to detect the best preset for the current system
+detect_best_preset() {
+    local preset_type="$1"  # "debug" or "release"
+    
+    # Check if Conan has generated presets (these are preferred)
+    case "$preset_type" in
+        "debug")
+            if [[ -f "build/build/Debug/generators/CMakePresets.json" ]] && 
+               grep -q "conan-debug" build/build/Debug/generators/CMakePresets.json 2>/dev/null; then
+                echo "conan-debug"
+                return
+            fi
+            ;;
+        "release")
+            if [[ -f "build/build/Release/generators/CMakePresets.json" ]] && 
+               grep -q "conan-release" build/build/Release/generators/CMakePresets.json 2>/dev/null; then
+                echo "conan-release"
+                return
+            fi
+            ;;
+    esac
+    
+    # Fall back to manual presets
+    case "$preset_type" in
+        "debug")
+            echo "dev-debug"
+            ;;
+        "release")
+            echo "dev-release"
+            ;;
+    esac
+}
+
+# Function to check if a preset exists
+preset_exists() {
     local preset="$1"
+    
+    # Check in Conan-generated presets first
+    if [[ -f "build/build/Debug/generators/CMakePresets.json" ]]; then
+        if grep -q "\"name\": \"$preset\"" build/build/Debug/generators/CMakePresets.json 2>/dev/null; then
+            return 0
+        fi
+    fi
+    
+    if [[ -f "build/build/Release/generators/CMakePresets.json" ]]; then
+        if grep -q "\"name\": \"$preset\"" build/build/Release/generators/CMakePresets.json 2>/dev/null; then
+            return 0
+        fi
+    fi
+    
+    # Check in our manual presets
     for available in "${AVAILABLE_PRESETS[@]}"; do
         if [[ "$preset" == "$available" ]]; then
             return 0
         fi
     done
-    log_error "Invalid preset '$preset'"
-    log_info "Available presets: ${AVAILABLE_PRESETS[*]}"
-    exit 1
+    
+    return 1
+}
+
+# Validate preset
+validate_preset() {
+    local preset="$1"
+    if ! preset_exists "$preset"; then
+        log_error "Invalid preset '$preset'"
+        log_info "Available presets: ${AVAILABLE_PRESETS[*]}"
+        if [[ -f "build/build/Debug/generators/CMakePresets.json" ]]; then
+            log_info "Note: Conan-generated presets are available and preferred"
+        fi
+        exit 1
+    fi
 }
 
 # Get build directory for preset
 get_build_dir() {
     local preset="$1"
+    
+    # For Conan-generated presets, check the actual preset definition
+    for preset_file in "build/build/Debug/generators/CMakePresets.json" "build/build/Release/generators/CMakePresets.json"; do
+        if [[ -f "$preset_file" ]] && 
+           grep -q "\"name\": \"$preset\"" "$preset_file" 2>/dev/null; then
+            # Extract binaryDir from the Conan preset
+            local binary_dir=$(grep -A10 "\"name\": \"$preset\"" "$preset_file" | \
+                              grep "binaryDir" | head -1 | sed 's/.*": *"//' | sed 's/".*//')
+            if [[ -n "$binary_dir" ]]; then
+                echo "$binary_dir"
+                return
+            fi
+        fi
+    done
+    
+    # Fall back to manual preset mapping
     case "$preset" in
+        "conan-debug") echo "build/build/Debug" ;;
+        "conan-release") echo "build/build/Release" ;;
         "dev-debug") echo "build/Debug" ;;
         "dev-release") echo "build/Release" ;;
         "package-unity") echo "build/Unity" ;;
@@ -143,12 +227,13 @@ get_build_dir() {
 }
 
 # Initialize variables
-PRESET="dev-debug"
+PRESET="$(detect_best_preset debug)"
 JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo "4")
 VERBOSE=false
 QUIET=false
 SHARED=false
 THREAD_SAFE=false
+BENCHMARKS=false
 
 # Parse options
 while [[ $# -gt 0 ]]; do
@@ -177,6 +262,10 @@ while [[ $# -gt 0 ]]; do
             THREAD_SAFE=true
             shift
             ;;
+        --benchmarks)
+            BENCHMARKS=true
+            shift
+            ;;
         -h|--help)
             usage
             ;;
@@ -196,7 +285,7 @@ if [[ -z "$COMMAND" ]]; then
     usage
 fi
 
-# Validate preset
+# Validate preset now that functions are defined
 validate_preset "$PRESET"
 
 # Set build directory
@@ -208,6 +297,19 @@ MAKE_VERBOSE=""
 if $VERBOSE; then
     CMAKE_VERBOSE="--verbose"
     MAKE_VERBOSE="VERBOSE=1"
+fi
+
+# Set up environment for manual presets that need Conan toolchain
+if [[ -f "build/build/Debug/generators/conan_toolchain.cmake" ]]; then
+    export CONAN_TOOLCHAIN="build/build/Debug/generators/conan_toolchain.cmake"
+    if ! $QUIET; then
+        log_info "Set CONAN_TOOLCHAIN=$CONAN_TOOLCHAIN (Debug)"
+    fi
+elif [[ -f "build/build/Release/generators/conan_toolchain.cmake" ]]; then
+    export CONAN_TOOLCHAIN="build/build/Release/generators/conan_toolchain.cmake"
+    if ! $QUIET; then
+        log_info "Set CONAN_TOOLCHAIN=$CONAN_TOOLCHAIN (Release)"
+    fi
 fi
 
 # Main command execution
@@ -236,6 +338,11 @@ case "$COMMAND" in
             conan_args+=("-o" "octa-core/*:thread_safe=True")
         fi
         
+        # Enable benchmarks for release presets or when explicitly requested
+        if [[ "$PRESET" == *"release"* ]] || [[ "$PRESET" == "package-"* ]] || $BENCHMARKS; then
+            conan_args+=("-o" "octa-core/*:enable_benchmarks=True")
+        fi
+        
         if ! $QUIET; then
             log_info "Running: conan ${conan_args[*]}"
         fi
@@ -261,7 +368,24 @@ case "$COMMAND" in
         cmake "${configure_args[@]}"
         
         # Build
-        BUILD_PRESET="${PRESET}-build"
+        # Handle different build preset naming conventions
+        preset_is_conan=false
+        for preset_file in "build/build/Debug/generators/CMakePresets.json" "build/build/Release/generators/CMakePresets.json"; do
+            if [[ -f "$preset_file" ]] && 
+               grep -q "\"name\": \"$PRESET\"" "$preset_file" 2>/dev/null; then
+                preset_is_conan=true
+                break
+            fi
+        done
+        
+        if $preset_is_conan; then
+            # For Conan-generated presets, the build preset has the same name
+            BUILD_PRESET="$PRESET"
+        else
+            # For manual presets, append "-build"
+            BUILD_PRESET="${PRESET}-build"
+        fi
+        
         if ! $QUIET; then
             log_info "Building with preset: $BUILD_PRESET"
         fi
@@ -279,7 +403,24 @@ case "$COMMAND" in
     test)
         log_step "Running tests (preset: $PRESET)"
         
-        TEST_PRESET="${PRESET}-test"
+        # Handle different test preset naming conventions
+        preset_is_conan=false
+        for preset_file in "build/build/Debug/generators/CMakePresets.json" "build/build/Release/generators/CMakePresets.json"; do
+            if [[ -f "$preset_file" ]] && 
+               grep -q "\"name\": \"$PRESET\"" "$preset_file" 2>/dev/null; then
+                preset_is_conan=true
+                break
+            fi
+        done
+        
+        if $preset_is_conan; then
+            # For Conan-generated presets, the test preset has the same name
+            TEST_PRESET="$PRESET"
+        else
+            # For manual presets, append "-test"
+            TEST_PRESET="${PRESET}-test"
+        fi
+        
         test_args=("--preset" "$TEST_PRESET")
         
         if $VERBOSE; then
@@ -296,19 +437,63 @@ case "$COMMAND" in
         
     benchmark)
         log_step "Running performance benchmarks"
+        check_dependencies
         
         if [[ "$PRESET" != *"release"* ]]; then
             log_warning "Benchmarks should be run with release builds for accurate results"
-            log_info "Consider using: $0 -p dev-release benchmark"
+            log_info "Consider using: $0 -p conan-release benchmark"
         fi
         
         BENCH_EXECUTABLE="$BUILD_DIR/perf_suite"
         if [[ ! -f "$BENCH_EXECUTABLE" ]]; then
             log_error "Benchmark executable not found at $BENCH_EXECUTABLE"
-            log_info "Make sure to build with benchmarks enabled (dev-release preset)"
+            log_info "Benchmarks need to be built first. Running with benchmarks enabled..."
+            
+            # Install dependencies with benchmarks enabled
+            log_info "Installing dependencies with benchmarks enabled"
+            conan_args=(
+                "install" "."
+                "--output-folder=build"
+                "--build=missing"
+                "-o" "octa-core/*:enable_benchmarks=True"
+            )
+            
+            if [[ "$PRESET" == *"release"* ]] || [[ "$PRESET" == "package-"* ]]; then
+                conan_args+=("--settings=build_type=Release")
+            else
+                conan_args+=("--settings=build_type=Debug")
+            fi
+            
+            conan "${conan_args[@]}"
+            
+            # Reconfigure and build with benchmarks enabled
+            log_info "Building with benchmarks enabled"
+            cmake --preset "$PRESET" -DBUILD_BENCHMARKS=ON
+            
+            preset_is_conan=false
+            for preset_file in "build/build/Debug/generators/CMakePresets.json" "build/build/Release/generators/CMakePresets.json"; do
+                if [[ -f "$preset_file" ]] && 
+                   grep -q "\"name\": \"$PRESET\"" "$preset_file" 2>/dev/null; then
+                    preset_is_conan=true
+                    break
+                fi
+            done
+            
+            if $preset_is_conan; then
+                BUILD_PRESET="$PRESET"
+            else
+                BUILD_PRESET="${PRESET}-build"
+            fi
+            
+            cmake --build --preset "$BUILD_PRESET" -j "$JOBS"
+        fi
+        
+        if [[ ! -f "$BENCH_EXECUTABLE" ]]; then
+            log_error "Failed to build benchmark executable"
             exit 1
         fi
         
+        log_info "Running benchmarks: $BENCH_EXECUTABLE"
         "$BENCH_EXECUTABLE"
         log_success "Benchmarks completed successfully"
         ;;
@@ -404,6 +589,7 @@ case "$COMMAND" in
         printf "  Jobs: %s\n" "$JOBS"
         printf "  Shared Libraries: %s\n" "$SHARED"
         printf "  Thread Safe: %s\n" "$THREAD_SAFE"
+        printf "  Benchmarks: %s\n" "$BENCHMARKS"
         echo
         printf "${CYAN}Tools:${NC}\n"
         printf "  CMake: %s\n" "$(cmake --version | head -1 || echo "Not found")"

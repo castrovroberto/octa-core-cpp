@@ -1,43 +1,68 @@
-# Octa-Core Build Management Scripts
+# 🛠️ Development Scripts
 
-This directory contains comprehensive build management tools for the Octa-Core C++ project.
+This directory contains automation scripts for building, testing, and managing the Octa-Core C++ project.
 
-## 🛠️ Scripts Overview
+## 📜 Scripts Overview
 
-### [`manage.sh`](manage.sh) - Main Management Script
+### [`manage.sh`](manage.sh) - Main Project Management
 
-A comprehensive project management script that handles all aspects of building, testing, and maintaining the Octa-Core project.
+The primary development script with comprehensive project management capabilities.
+
+**Smart Preset Detection**: The script automatically detects and prioritizes Conan-generated presets (like `conan-debug`) which use the correct compiler toolchain. This ensures compatibility with our Homebrew LLVM setup on macOS.
+
+**Usage:**
+```bash
+./scripts/manage.sh [options] <command>
+```
 
 **Key Features:**
-- ✅ **Colored output** with clear progress indicators
-- ✅ **Dependency validation** (checks for cmake, conan, ninja)
-- ✅ **Preset validation** with auto-completion suggestions  
-- ✅ **Parallel builds** with automatic job detection
-- ✅ **Conan integration** for dependency management
-- ✅ **Multiple build configurations** (debug, release, packages)
-- ✅ **Comprehensive tooling** (format, docs, benchmarks, coverage)
+- **Auto-detects best preset**: Prefers `conan-debug`/`conan-release` when available
+- **Compiler compatibility**: Works with Homebrew LLVM toolchain  
+- **11 comprehensive commands**: install, build, test, benchmark, coverage, format, docs, package, clean, presets, info, all
+- **Colored output** with terminal detection
+- **Preset validation** to prevent configuration errors
 
-**Usage Examples:**
+**Commands:**
+- `install` - Install dependencies using Conan (with smart toolchain detection)
+- `build` - Configure and build using the best available preset
+- `test` - Run unit tests with appropriate configuration
+- `benchmark` - Run performance benchmarks (requires release build)
+- `coverage` - Generate test coverage reports
+- `format` - Format code using clang-format
+- `docs` - Generate Doxygen documentation
+- `package` - Build Unity and Godot packages
+- `clean` - Remove all build artifacts
+- `presets` - List available CMake presets
+- `info` - Show project and environment information
+- `all` - Full development cycle (install + build + test)
+
+**Preset Priority Order:**
+1. **Conan-generated presets** (preferred): `conan-debug`, `conan-release`
+2. **Manual presets** (fallback): `dev-debug`, `dev-release`, `package-unity`, `package-godot`
+
+**Options:**
+- `-p PRESET` - Override preset (default: auto-detect)
+- `-j JOBS` - Parallel build jobs (default: CPU count)
+- `-v` - Verbose output
+- `-q` - Quiet mode
+- `--shared` - Build shared libraries
+- `--thread-safe` - Enable thread safety
+
+**Examples:**
 ```bash
-# See all available commands
-./scripts/manage.sh --help
-
-# Full development cycle
+# Full development cycle with auto-detected preset
 ./scripts/manage.sh all
+
+# Build with specific preset
+./scripts/manage.sh -p conan-debug build
 
 # Release build with benchmarks
 ./scripts/manage.sh -p dev-release build
 ./scripts/manage.sh -p dev-release benchmark
 
-# Code formatting and validation
-./scripts/manage.sh format
-./scripts/manage.sh test
-
-# Generate documentation
-./scripts/manage.sh docs
-
-# Build engine packages
-./scripts/manage.sh --shared package
+# Show available presets and current configuration
+./scripts/manage.sh presets
+./scripts/manage.sh info
 ```
 
 ### [`quick.sh`](quick.sh) - Development Shortcuts
@@ -72,11 +97,15 @@ A convenience script providing quick shortcuts for common development tasks.
 
 Generates comprehensive test coverage reports using gcovr or lcov.
 
+**Smart Preset Detection**: Automatically detects and uses the `conan-debug` preset when available, ensuring compatibility with the Homebrew LLVM toolchain.
+
 **Features:**
+- **Auto-detects best preset**: Prefers `conan-debug` over `conan-default`
 - Supports multiple coverage tools (gcovr, lcov, gcov)
 - HTML report generation
 - Coverage threshold validation (≥70% for P1.4)
 - Excludes test and benchmark code from coverage
+- Works with both Conan-generated and manual build directories
 
 ## 🚀 Quick Start
 
@@ -105,13 +134,23 @@ chmod +x scripts/*.sh
 
 ### CMake Presets
 
-The scripts work with predefined CMake presets:
+The scripts work with both Conan-generated and manual CMake presets:
 
-- `dev-debug` - Development debug build (default)
+**Conan-Generated Presets (Preferred):**
+- `conan-debug` - Debug build with Homebrew LLVM toolchain
+- `conan-release` - Release build with Homebrew LLVM toolchain
+
+**Manual Presets (Fallback):**
+- `dev-debug` - Development debug build
 - `dev-release` - Development release build with benchmarks
 - `package-unity` - Unity engine package build
 - `package-godot` - Godot engine package build  
-- `conan-default` - Conan-managed build
+- `conan-default` - Conan-managed build (legacy)
+
+**Smart Auto-Detection:**
+The scripts automatically detect the best preset to use:
+1. **First Priority**: Conan-generated presets (use correct compiler)
+2. **Fallback**: Manual presets for compatibility
 
 ### Environment Variables
 
@@ -189,4 +228,12 @@ When adding new scripts or modifying existing ones:
 - Colors are disabled automatically in non-interactive environments
 - All scripts are designed to be run from the project root directory
 - Scripts gracefully handle missing optional tools
-- Preset validation prevents common configuration errors 
+- Preset validation prevents common configuration errors
+
+### Recent Improvements (v1.1)
+
+- **Smart Preset Detection**: Automatically detects Conan-generated presets
+- **Homebrew LLVM Support**: Prioritizes `conan-debug` preset for macOS compatibility
+- **Improved Error Handling**: Better validation and fallback mechanisms
+- **Coverage Script Updates**: Dynamic build directory detection
+- **Documentation Updates**: Comprehensive workflow documentation 

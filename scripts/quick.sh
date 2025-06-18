@@ -52,21 +52,36 @@ fi
 case "$1" in
     dev)
         printf "%s🚀 Running full development cycle...%s\n" "${BLUE}" "${NC}"
-        "$MANAGE_SCRIPT" -p dev-debug all
+        "$MANAGE_SCRIPT" all
         ;;
     release)
         printf "%s🏁 Building and testing release version...%s\n" "${BLUE}" "${NC}"
-        "$MANAGE_SCRIPT" -p dev-release build
-        "$MANAGE_SCRIPT" -p dev-release test
+        # Use conan-release if available, otherwise dev-release
+        if [[ -f "build/build/Release/generators/CMakePresets.json" ]] && 
+           grep -q "conan-release" build/build/Release/generators/CMakePresets.json 2>/dev/null; then
+            RELEASE_PRESET="conan-release"
+        else
+            RELEASE_PRESET="dev-release"
+        fi
+        "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" build
+        "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" test
         ;;
     bench)
         printf "%s⚡ Running performance benchmarks...%s\n" "${BLUE}" "${NC}"
-        "$MANAGE_SCRIPT" -p dev-release build
-        "$MANAGE_SCRIPT" -p dev-release benchmark
+        # Use conan-release if available, otherwise dev-release
+        if [[ -f "build/build/Release/generators/CMakePresets.json" ]] && 
+           grep -q "conan-release" build/build/Release/generators/CMakePresets.json 2>/dev/null; then
+            RELEASE_PRESET="conan-release"
+        else
+            RELEASE_PRESET="dev-release"
+        fi
+        "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" build
+        "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" benchmark
         ;;
     check)
         printf "%s✅ Quick test validation...%s\n" "${BLUE}" "${NC}"
-        "$MANAGE_SCRIPT" -p dev-debug test
+        # Use the default debug preset (auto-detected by manage.sh)
+        "$MANAGE_SCRIPT" test
         ;;
     fmt)
         printf "%s🎨 Formatting code...%s\n" "${BLUE}" "${NC}"

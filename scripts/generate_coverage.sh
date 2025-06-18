@@ -14,6 +14,16 @@ if [ ! -f "CMakeLists.txt" ]; then
     exit 1
 fi
 
+# Detect the best preset to use
+PRESET="conan-default"
+if [[ -f "build/build/Debug/generators/CMakePresets.json" ]] && 
+   grep -q "conan-debug" build/build/Debug/generators/CMakePresets.json 2>/dev/null; then
+    PRESET="conan-debug"
+    echo "ℹ️  Using Conan-generated preset: $PRESET"
+else
+    echo "ℹ️  Using fallback preset: $PRESET"
+fi
+
 # Clean previous coverage data
 echo "🧹 Cleaning previous coverage data..."
 find . -name "*.gcda" -delete
@@ -22,17 +32,24 @@ rm -rf coverage_report/
 
 # Configure with coverage enabled
 echo "⚙️ Configuring project with coverage enabled..."
-cmake --preset conan-default -DENABLE_COVERAGE=ON -DBUILD_TESTS=ON
+cmake --preset "$PRESET" -DENABLE_COVERAGE=ON -DBUILD_TESTS=ON
 
 # Build the project
 echo "🔨 Building project..."
-cmake --build --preset conan-default
+cmake --build --preset "$PRESET"
+
+# Get the correct build directory based on preset
+if [[ "$PRESET" == "conan-debug" ]]; then
+    BUILD_DIR="build/build/Debug"
+else
+    BUILD_DIR="build"
+fi
 
 # Run tests to generate coverage data
 echo "🧪 Running tests to generate coverage data..."
-cd build/conan-default
+cd "$BUILD_DIR"
 ./run_tests
-cd ../..
+cd - > /dev/null
 
 # Check for gcov
 if ! command -v gcov &> /dev/null; then
@@ -91,7 +108,7 @@ else
     mkdir -p coverage_report
     
     # Find all .gcda files and generate reports
-    find build/Debug -name "*.gcda" -exec gcov {} \;
+    find "$BUILD_DIR" -name "*.gcda" -exec gcov {} \;
     
     # Move .gcov files to coverage directory
     mv *.gcov coverage_report/ 2>/dev/null || true
