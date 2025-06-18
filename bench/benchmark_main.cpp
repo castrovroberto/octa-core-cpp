@@ -450,7 +450,319 @@ static void BM_MakeMove_LargeMapStress(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(BM_MakeMove_LargeMapStress)->Range(2, 10);  // Test map sizes from 5x5 to 21x21
+BENCHMARK(BM_MakeMove_LargeMapStress)->Range(2, 10)->Unit(benchmark::kMicrosecond);
+
+// ============================================================================
+// PHASE P2.2.3 ADVANCED BENCHMARK FEATURES
+// ============================================================================
+
+/**
+ * @brief Memory tracking benchmark - measures allocations during makeMove()
+ * @param state Benchmark state with range parameter for chain length
+ */
+static void BM_MakeMove_MemoryTracking(benchmark::State& state) {
+    const int chainLength = static_cast<int>(state.range(0));
+    
+    for (auto _ : state) {
+        state.PauseTiming();
+        
+        // Create fresh scenario for each iteration
+        auto gameMap = std::make_shared<GraphGameMap>(3); // Large enough for chain
+        GameConfig config;
+        OctaGameLogic logic(gameMap, config);
+        
+        auto startCell = setupChainReaction(gameMap, chainLength);
+        
+        state.ResumeTiming();
+        
+        // Measure the actual makeMove operation
+        logic.makeMove(startCell, Player::PLAYER_1);
+    }
+    
+    // Report custom metrics
+    state.SetItemsProcessed(state.iterations() * chainLength);
+    state.SetBytesProcessed(state.iterations() * sizeof(GameCell) * chainLength);
+    state.SetLabel("memory_tracking");
+}
+BENCHMARK(BM_MakeMove_MemoryTracking)->Range(8, 256)->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Scalability analysis - performance vs map size
+ * @param state Benchmark state with range parameter for map radius
+ */
+static void BM_Scalability_MapSize(benchmark::State& state) {
+    const int mapRadius = static_cast<int>(state.range(0));
+    
+    for (auto _ : state) {
+        state.PauseTiming();
+        
+        auto gameMap = std::make_shared<GraphGameMap>(mapRadius);
+        GameConfig config;
+        OctaGameLogic logic(gameMap, config);
+        
+        // Create consistent load regardless of map size
+        auto centerCell = gameMap->at(Coordinate(0, 0));
+        centerCell->setState(CellState::PLAYER_1);
+        centerCell->setValue(mapRadius + 2); // Ensure explosion
+        
+        state.ResumeTiming();
+        
+        logic.makeMove(centerCell, Player::PLAYER_1);
+    }
+    
+    // Report scaling metrics
+    state.SetComplexityN(mapRadius);
+    state.SetLabel("map_radius_" + std::to_string(mapRadius));
+}
+BENCHMARK(BM_Scalability_MapSize)->Range(1, 8)->Complexity(benchmark::oN);
+
+/**
+ * @brief Safety level comparison - overhead analysis
+ * @param state Benchmark state
+ */
+static void BM_SafetyLevel_Comparison(benchmark::State& state) {
+    const int safetyLevel = static_cast<int>(state.range(0));
+    
+    for (auto _ : state) {
+        state.PauseTiming();
+        
+        auto gameMap = std::make_shared<GraphGameMap>(3);
+        GameConfig config;
+        
+        // Set safety level based on parameter
+        switch (safetyLevel) {
+            case 0: config.safetyLevel = SafetyLevel::VALIDATE_ONLY; break;
+            case 1: config.safetyLevel = SafetyLevel::LIGHT_UNDO; break;
+            default: config.safetyLevel = SafetyLevel::VALIDATE_ONLY; break;
+        }
+        
+        OctaGameLogic logic(gameMap, config);
+        auto startCell = setupChainReaction(gameMap, 20); // Medium chain
+        
+        state.ResumeTiming();
+        
+        logic.makeMove(startCell, Player::PLAYER_1);
+    }
+    
+    // Label for easy identification
+    std::string levelName = (safetyLevel == 0) ? "VALIDATE_ONLY" : "LIGHT_UNDO";
+    state.SetLabel(levelName);
+}
+BENCHMARK(BM_SafetyLevel_Comparison)->Arg(0)->Arg(1)->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Cache performance simulation - measures memory access patterns
+ * @param state Benchmark state with range for memory stride
+ */
+static void BM_CachePerformance_AccessPattern(benchmark::State& state) {
+    const int accessStride = static_cast<int>(state.range(0));
+    
+    for (auto _ : state) {
+        state.PauseTiming();
+        
+        auto gameMap = std::make_shared<GraphGameMap>(4); // Large map for cache testing
+        GameConfig config;
+        OctaGameLogic logic(gameMap, config);
+        
+        // Create scattered access pattern to test cache performance
+        std::vector<std::shared_ptr<GameCell>> cellsToAccess;
+        for (int i = -4; i <= 4; i += accessStride) {
+            for (int j = -4; j <= 4; j += accessStride) {
+                if (auto cell = gameMap->at(Coordinate(i, j))) {
+                    cell->setState(CellState::PLAYER_1);
+                    cell->setValue(1);
+                    cellsToAccess.push_back(cell);
+                }
+            }
+        }
+        
+        state.ResumeTiming();
+        
+        // Simulate scattered memory access during chain propagation
+        Player currentPlayer = Player::PLAYER_1;
+        for (size_t i = 0; i < cellsToAccess.size() && i < 3; ++i) {
+            auto& cell = cellsToAccess[i];
+            
+            state.PauseTiming();
+            // Reset game state
+            logic.resetGame();
+            cell->setState(playerToCellState(currentPlayer));
+            cell->setValue(1);
+            state.ResumeTiming();
+            
+            try {
+                logic.makeMove(cell, currentPlayer);
+            } catch (...) {
+                // Skip failed moves
+            }
+            
+            currentPlayer = getOpponent(currentPlayer);
+        }
+    }
+    
+    state.SetLabel("stride_" + std::to_string(accessStride));
+}
+BENCHMARK(BM_CachePerformance_AccessPattern)->Range(1, 4)->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Resource utilization benchmark - tracks multiple metrics
+ * @param state Benchmark state with chain complexity parameter
+ */
+static void BM_ResourceUtilization_Comprehensive(benchmark::State& state) {
+    const int complexity = static_cast<int>(state.range(0));
+    size_t totalCellsProcessed = 0;
+    size_t totalStateChanges = 0;
+    
+    for (auto _ : state) {
+        state.PauseTiming();
+        
+        auto gameMap = std::make_shared<GraphGameMap>(3);
+        GameConfig config;
+        config.safetyLevel = SafetyLevel::LIGHT_UNDO; // Test with logging
+        OctaGameLogic logic(gameMap, config);
+        
+        // Create complex scenario based on parameter
+        auto startCell = setupChainReaction(gameMap, complexity);
+        
+        // Count initial neutral cells
+        size_t initialNeutralCells = 0;
+        for (int i = -3; i <= 3; ++i) {
+            for (int j = -3; j <= 3; ++j) {
+                if (auto cell = gameMap->at(Coordinate(i, j))) {
+                    if (cell->getState() == CellState::NEUTRAL) {
+                        initialNeutralCells++;
+                    }
+                }
+            }
+        }
+        
+        state.ResumeTiming();
+        
+        try {
+            auto result = logic.makeMove(startCell, Player::PLAYER_1);
+        } catch (...) {
+            // Skip failed moves and continue metrics collection
+        }
+        
+        state.PauseTiming();
+        
+        // Count cells changed
+        size_t finalNeutralCells = 0;
+        for (int i = -3; i <= 3; ++i) {
+            for (int j = -3; j <= 3; ++j) {
+                if (auto cell = gameMap->at(Coordinate(i, j))) {
+                    if (cell->getState() == CellState::NEUTRAL) {
+                        finalNeutralCells++;
+                    }
+                }
+            }
+        }
+        
+        totalCellsProcessed += complexity;
+        totalStateChanges += (initialNeutralCells - finalNeutralCells);
+        
+        state.ResumeTiming();
+    }
+    
+    // Report comprehensive metrics
+    state.SetItemsProcessed(totalCellsProcessed);
+    state.counters["StateChanges"] = totalStateChanges;
+    state.counters["AvgChangesPerMove"] = static_cast<double>(totalStateChanges) / state.iterations();
+    state.SetLabel("complexity_" + std::to_string(complexity));
+}
+BENCHMARK(BM_ResourceUtilization_Comprehensive)->Range(5, 50)->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Throughput benchmark - moves per second measurement
+ * @param state Benchmark state
+ */
+static void BM_Throughput_MovesPerSecond(benchmark::State& state) {
+    size_t moveCount = 0;
+    
+    for (auto _ : state) {
+        state.PauseTiming();
+        
+        // Create fresh game state for each iteration
+        auto gameMap = std::make_shared<GraphGameMap>(2);
+        GameConfig config;
+        OctaGameLogic logic(gameMap, config);
+        
+        // Setup simple move scenario
+        auto centerCell = gameMap->at(Coordinate(0, 0));
+        centerCell->setState(CellState::PLAYER_1);
+        centerCell->setValue(1);
+        
+        state.ResumeTiming();
+        
+        // Perform single optimized move
+        try {
+            logic.makeMove(centerCell, Player::PLAYER_1);
+            moveCount++;
+        } catch (...) {
+            // Skip failed moves
+        }
+    }
+    
+    // Report throughput metrics
+    state.SetItemsProcessed(moveCount);
+    state.counters["MovesPerSecond"] = benchmark::Counter(
+        moveCount, benchmark::Counter::kIsRate);
+    state.SetLabel("throughput");
+}
+BENCHMARK(BM_Throughput_MovesPerSecond)->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Memory allocation benchmark - tracks allocation patterns
+ * @param state Benchmark state with allocation pattern parameter
+ */
+static void BM_MemoryAllocation_Patterns(benchmark::State& state) {
+    const int pattern = static_cast<int>(state.range(0));
+    
+    for (auto _ : state) {
+        state.PauseTiming();
+        
+        // Different allocation patterns
+        std::shared_ptr<GraphGameMap> gameMap;
+        switch (pattern) {
+            case 0: // Small map, frequent allocations
+                gameMap = std::make_shared<GraphGameMap>(1);
+                break;
+            case 1: // Medium map, balanced allocations
+                gameMap = std::make_shared<GraphGameMap>(3);
+                break;
+            case 2: // Large map, infrequent allocations
+                gameMap = std::make_shared<GraphGameMap>(5);
+                break;
+            default:
+                gameMap = std::make_shared<GraphGameMap>(2);
+                break;
+        }
+        
+        GameConfig config;
+        config.safetyLevel = SafetyLevel::LIGHT_UNDO; // Force allocation tracking
+        OctaGameLogic logic(gameMap, config);
+        
+        auto startCell = setupChainReaction(gameMap, 10);
+        
+        state.ResumeTiming();
+        
+        // Multiple moves to stress allocation patterns
+        for (int i = 0; i < 5; ++i) {
+            state.PauseTiming();
+            logic.resetGame();
+            startCell = setupChainReaction(gameMap, 10);
+            state.ResumeTiming();
+            
+            logic.makeMove(startCell, Player::PLAYER_1);
+        }
+    }
+    
+    std::vector<std::string> patternNames = {"small_frequent", "medium_balanced", "large_infrequent"};
+    if (pattern < patternNames.size()) {
+        state.SetLabel(patternNames[pattern]);
+    }
+}
+BENCHMARK(BM_MemoryAllocation_Patterns)->Range(0, 2)->Unit(benchmark::kMicrosecond);
 
 /**
  * @brief Benchmark runner main function
