@@ -1,0 +1,84 @@
+Unable to determine clock rate from sysctl: hw.cpufrequency: No such file or directory
+This does not affect benchmark measurements, only the metadata output.
+***WARNING*** Failed to set thread affinity. Estimated CPU frequency may be incorrect.
+2025-06-18T15:54:43-06:00
+Running build/build/Release/perf_suite
+Run on (8 X 24 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x8)
+Load Average: 2.82, 3.33, 3.23
+-------------------------------------------------------------------------------------
+Benchmark                                           Time             CPU   Iterations
+-------------------------------------------------------------------------------------
+BM_GameLogic_MakeMove_SingleCell                 9930 ns         9899 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9945 ns         9913 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9891 ns         9856 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9891 ns         9865 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9890 ns         9857 ns        67699
+BM_GameLogic_MakeMove_SingleCell                13720 ns        10635 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9877 ns         9849 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9935 ns         9893 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9950 ns         9914 ns        67699
+BM_GameLogic_MakeMove_SingleCell                 9968 ns         9926 ns        67699
+BM_GameLogic_MakeMove_SingleCell_mean           10300 ns         9961 ns           10
+BM_GameLogic_MakeMove_SingleCell_median          9932 ns         9896 ns           10
+BM_GameLogic_MakeMove_SingleCell_stddev          1202 ns          238 ns           10
+BM_GameLogic_MakeMove_SingleCell_cv             11.67 %          2.39 %            10
+BM_GameLogic_MakeMove_ChainReaction              9908 ns         9879 ns        70699
+BM_GameLogic_MakeMove_ChainReaction             10068 ns         9988 ns        70699
+BM_GameLogic_MakeMove_ChainReaction             10121 ns        10025 ns        70699
+BM_GameLogic_MakeMove_ChainReaction             10737 ns        10243 ns        70699
+BM_GameLogic_MakeMove_ChainReaction              9983 ns         9932 ns        70699
+BM_GameLogic_MakeMove_ChainReaction              9925 ns         9891 ns        70699
+BM_GameLogic_MakeMove_ChainReaction             12470 ns        10501 ns        70699
+BM_GameLogic_MakeMove_ChainReaction              9947 ns         9907 ns        70699
+BM_GameLogic_MakeMove_ChainReaction              9989 ns         9930 ns        70699
+BM_GameLogic_MakeMove_ChainReaction             10138 ns        10031 ns        70699
+BM_GameLogic_MakeMove_ChainReaction_mean        10329 ns        10033 ns           10
+BM_GameLogic_MakeMove_ChainReaction_median      10028 ns         9960 ns           10
+BM_GameLogic_MakeMove_ChainReaction_stddev        790 ns          196 ns           10
+BM_GameLogic_MakeMove_ChainReaction_cv           7.65 %          1.96 %            10
+BM_MakeMove_ShortChain                           9981 ns         9889 ns        72273
+BM_MakeMove_ShortChain                           9962 ns         9881 ns        72273
+BM_MakeMove_ShortChain                          10066 ns         9873 ns        72273
+BM_MakeMove_ShortChain                           9871 ns         9825 ns        72273
+BM_MakeMove_ShortChain                          10453 ns        10017 ns        72273
+BM_MakeMove_ShortChain                           9756 ns         9719 ns        72273
+BM_MakeMove_ShortChain                           9885 ns         9827 ns        72273
+BM_MakeMove_ShortChain                           9800 ns         9766 ns        72273
+BM_MakeMove_ShortChain                          10419 ns        10032 ns        72273
+BM_MakeMove_ShortChain                           9907 ns         9862 ns        72273
+BM_MakeMove_ShortChain_mean                     10010 ns         9869 ns           10
+BM_MakeMove_ShortChain_median                    9934 ns         9867 ns           10
+BM_MakeMove_ShortChain_stddev                     241 ns         97.7 ns           10
+BM_MakeMove_ShortChain_cv                        2.41 %          0.99 %            10
+BM_MakeMove_MediumChain                         11909 ns        11859 ns        59269
+BM_MakeMove_MediumChain                         11906 ns        11851 ns        59269
+BM_MakeMove_MediumChain                         11920 ns        11870 ns        59269
+BM_MakeMove_MediumChain                         11830 ns        11798 ns        59269
+BM_MakeMove_MediumChain                         11860 ns        11833 ns        59269
+BM_MakeMove_MediumChain                         11819 ns        11789 ns        59269
+BM_MakeMove_MediumChain                         11846 ns        11812 ns        59269
+BM_MakeMove_MediumChain                         11825 ns        11784 ns        59269
+BM_MakeMove_MediumChain                         11847 ns        11820 ns        59269
+BM_MakeMove_MediumChain                         11888 ns        11859 ns        59269
+BM_MakeMove_MediumChain_mean                    11865 ns        11827 ns           10
+BM_MakeMove_MediumChain_median                  11853 ns        11826 ns           10
+BM_MakeMove_MediumChain_stddev                   37.7 ns         31.4 ns           10
+BM_MakeMove_MediumChain_cv                       0.32 %          0.27 %            10
+BM_MakeMove_LongChain                           17662 ns        17589 ns        39625
+BM_MakeMove_LongChain                           17665 ns        17605 ns        39625
+BM_MakeMove_LongChain                           17662 ns        17596 ns        39625
+BM_MakeMove_LongChain                           17676 ns        17610 ns        39625
+BM_MakeMove_LongChain                           17659 ns        17599 ns        39625
+BM_MakeMove_LongChain                           17625 ns        17568 ns        39625
+BM_MakeMove_LongChain                           17709 ns        17629 ns        39625
+BM_MakeMove_LongChain                           17589 ns        17533 ns        39625
+BM_MakeMove_LongChain                           17635 ns        17583 ns        39625
+BM_MakeMove_LongChain                           17699 ns        17634 ns        39625
+BM_MakeMove_LongChain_mean                      17658 ns        17595 ns           10
+BM_MakeMove_LongChain_median                    17662 ns        17597 ns           10
+BM_MakeMove_LongChain_stddev                     35.1 ns         29.4 ns           10
+BM_MakeMove_LongChain_cv                         0.20 %          0.17 %            10

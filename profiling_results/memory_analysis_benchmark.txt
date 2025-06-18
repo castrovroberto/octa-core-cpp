@@ -1,0 +1,95 @@
+Unable to determine clock rate from sysctl: hw.cpufrequency: No such file or directory
+This does not affect benchmark measurements, only the metadata output.
+***WARNING*** Failed to set thread affinity. Estimated CPU frequency may be incorrect.
+2025-06-18T15:55:20-06:00
+Running build/build/Release/perf_suite
+Run on (8 X 24 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x8)
+Load Average: 4.56, 3.73, 3.38
+---------------------------------------------------------------------------------------------------------
+Benchmark                                               Time             CPU   Iterations UserCounters...
+---------------------------------------------------------------------------------------------------------
+BM_MakeMove_MemoryTracking/8                         14.8 us         14.8 us        46556 bytes_per_second=74.463Mi/s items_per_second=542.223k/s memory_tracking
+BM_MakeMove_MemoryTracking/8                         14.9 us         14.8 us        46556 bytes_per_second=74.4596Mi/s items_per_second=542.198k/s memory_tracking
+BM_MakeMove_MemoryTracking/8                         14.8 us         14.8 us        46556 bytes_per_second=74.455Mi/s items_per_second=542.164k/s memory_tracking
+BM_MakeMove_MemoryTracking/8                         14.7 us         14.7 us        46556 bytes_per_second=74.8006Mi/s items_per_second=544.681k/s memory_tracking
+BM_MakeMove_MemoryTracking/8                         15.3 us         14.9 us        46556 bytes_per_second=73.7507Mi/s items_per_second=537.036k/s memory_tracking
+BM_MakeMove_MemoryTracking/8_mean                    14.9 us         14.8 us            5 bytes_per_second=74.3858Mi/s items_per_second=541.661k/s memory_tracking
+BM_MakeMove_MemoryTracking/8_median                  14.8 us         14.8 us            5 bytes_per_second=74.4596Mi/s items_per_second=542.198k/s memory_tracking
+BM_MakeMove_MemoryTracking/8_stddev                 0.244 us        0.077 us            5 bytes_per_second=393.799Ki/s items_per_second=2.80035k/s memory_tracking
+BM_MakeMove_MemoryTracking/8_cv                      1.64 %          0.52 %             5 bytes_per_second=0.52% items_per_second=0.52% memory_tracking
+BM_MakeMove_MemoryTracking/64                        14.7 us         14.6 us        47561 bytes_per_second=600.198Mi/s items_per_second=4.37051M/s memory_tracking
+BM_MakeMove_MemoryTracking/64                        14.8 us         14.7 us        47561 bytes_per_second=596.845Mi/s items_per_second=4.34609M/s memory_tracking
+BM_MakeMove_MemoryTracking/64                        14.8 us         14.7 us        47561 bytes_per_second=596.19Mi/s items_per_second=4.34132M/s memory_tracking
+BM_MakeMove_MemoryTracking/64                        14.7 us         14.7 us        47561 bytes_per_second=599.025Mi/s items_per_second=4.36197M/s memory_tracking
+BM_MakeMove_MemoryTracking/64                        14.8 us         14.7 us        47561 bytes_per_second=597.438Mi/s items_per_second=4.35041M/s memory_tracking
+BM_MakeMove_MemoryTracking/64_mean                   14.8 us         14.7 us            5 bytes_per_second=597.939Mi/s items_per_second=4.35406M/s memory_tracking
+BM_MakeMove_MemoryTracking/64_median                 14.8 us         14.7 us            5 bytes_per_second=597.438Mi/s items_per_second=4.35041M/s memory_tracking
+BM_MakeMove_MemoryTracking/64_stddev                0.064 us        0.040 us            5 bytes_per_second=1.64232Mi/s items_per_second=11.959k/s memory_tracking
+BM_MakeMove_MemoryTracking/64_cv                     0.43 %          0.27 %             5 bytes_per_second=0.27% items_per_second=0.27% memory_tracking
+BM_MakeMove_MemoryTracking/256                       14.7 us         14.7 us        47847 bytes_per_second=2.339Gi/s items_per_second=17.4409M/s memory_tracking
+BM_MakeMove_MemoryTracking/256                       14.7 us         14.7 us        47847 bytes_per_second=2.34195Gi/s items_per_second=17.4629M/s memory_tracking
+BM_MakeMove_MemoryTracking/256                       15.6 us         15.0 us        47847 bytes_per_second=2.29334Gi/s items_per_second=17.1004M/s memory_tracking
+BM_MakeMove_MemoryTracking/256                       14.7 us         14.6 us        47847 bytes_per_second=2.347Gi/s items_per_second=17.5005M/s memory_tracking
+BM_MakeMove_MemoryTracking/256                       14.8 us         14.7 us        47847 bytes_per_second=2.33119Gi/s items_per_second=17.3826M/s memory_tracking
+BM_MakeMove_MemoryTracking/256_mean                  14.9 us         14.7 us            5 bytes_per_second=2.3305Gi/s items_per_second=17.3775M/s memory_tracking
+BM_MakeMove_MemoryTracking/256_median                14.7 us         14.7 us            5 bytes_per_second=2.339Gi/s items_per_second=17.4409M/s memory_tracking
+BM_MakeMove_MemoryTracking/256_stddev               0.386 us        0.138 us            5 bytes_per_second=22.0644Mi/s items_per_second=160.668k/s memory_tracking
+BM_MakeMove_MemoryTracking/256_cv                    2.59 %          0.93 %             5 bytes_per_second=0.92% items_per_second=0.92% memory_tracking
+BM_ResourceUtilization_Comprehensive/5               15.5 us         15.5 us        40031 AvgChangesPerMove=0 StateChanges=0 items_per_second=323.551k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5               15.5 us         15.5 us        40031 AvgChangesPerMove=0 StateChanges=0 items_per_second=323.057k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5               15.5 us         15.4 us        40031 AvgChangesPerMove=0 StateChanges=0 items_per_second=324.067k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5               15.5 us         15.4 us        40031 AvgChangesPerMove=0 StateChanges=0 items_per_second=323.651k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5               15.6 us         15.6 us        40031 AvgChangesPerMove=0 StateChanges=0 items_per_second=321.408k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5_mean          15.5 us         15.5 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=323.147k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5_median        15.5 us         15.5 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=323.551k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5_stddev       0.052 us        0.050 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=1.03633k/s complexity_5
+BM_ResourceUtilization_Comprehensive/5_cv            0.34 %          0.32 %             5 AvgChangesPerMove=nan% StateChanges=nan% items_per_second=0.32% complexity_5
+BM_ResourceUtilization_Comprehensive/8               16.2 us         15.7 us        45286 AvgChangesPerMove=0 StateChanges=0 items_per_second=510.291k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8               15.6 us         15.5 us        45286 AvgChangesPerMove=0 StateChanges=0 items_per_second=515.184k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8               15.6 us         15.5 us        45286 AvgChangesPerMove=0 StateChanges=0 items_per_second=515.904k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8               15.5 us         15.4 us        45286 AvgChangesPerMove=0 StateChanges=0 items_per_second=517.926k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8               18.4 us         16.2 us        45286 AvgChangesPerMove=0 StateChanges=0 items_per_second=492.607k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8_mean          16.2 us         15.7 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=510.383k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8_median        15.6 us         15.5 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=515.184k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8_stddev        1.23 us        0.325 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=10.3249k/s complexity_8
+BM_ResourceUtilization_Comprehensive/8_cv            7.58 %          2.07 %             5 AvgChangesPerMove=nan% StateChanges=nan% items_per_second=2.02% complexity_8
+BM_ResourceUtilization_Comprehensive/50              15.6 us         15.5 us        45378 AvgChangesPerMove=0 StateChanges=0 items_per_second=3.21843M/s complexity_50
+BM_ResourceUtilization_Comprehensive/50              15.5 us         15.5 us        45378 AvgChangesPerMove=0 StateChanges=0 items_per_second=3.22913M/s complexity_50
+BM_ResourceUtilization_Comprehensive/50              15.9 us         15.7 us        45378 AvgChangesPerMove=0 StateChanges=0 items_per_second=3.19285M/s complexity_50
+BM_ResourceUtilization_Comprehensive/50              15.5 us         15.5 us        45378 AvgChangesPerMove=0 StateChanges=0 items_per_second=3.22672M/s complexity_50
+BM_ResourceUtilization_Comprehensive/50              15.5 us         15.4 us        45378 AvgChangesPerMove=0 StateChanges=0 items_per_second=3.23819M/s complexity_50
+BM_ResourceUtilization_Comprehensive/50_mean         15.6 us         15.5 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=3.22106M/s complexity_50
+BM_ResourceUtilization_Comprehensive/50_median       15.5 us         15.5 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=3.22672M/s complexity_50
+BM_ResourceUtilization_Comprehensive/50_stddev      0.169 us        0.084 us            5 AvgChangesPerMove=0 StateChanges=0 items_per_second=17.2725k/s complexity_50
+BM_ResourceUtilization_Comprehensive/50_cv           1.08 %          0.54 %             5 AvgChangesPerMove=nan% StateChanges=nan% items_per_second=0.54% complexity_50
+BM_MemoryAllocation_Patterns/0                       59.8 us         59.6 us        11781 small_frequent
+BM_MemoryAllocation_Patterns/0                       60.3 us         60.0 us        11781 small_frequent
+BM_MemoryAllocation_Patterns/0                       59.9 us         59.7 us        11781 small_frequent
+BM_MemoryAllocation_Patterns/0                       59.9 us         59.7 us        11781 small_frequent
+BM_MemoryAllocation_Patterns/0                       60.0 us         59.8 us        11781 small_frequent
+BM_MemoryAllocation_Patterns/0_mean                  60.0 us         59.8 us            5 small_frequent
+BM_MemoryAllocation_Patterns/0_median                59.9 us         59.7 us            5 small_frequent
+BM_MemoryAllocation_Patterns/0_stddev               0.190 us        0.135 us            5 small_frequent
+BM_MemoryAllocation_Patterns/0_cv                    0.32 %          0.23 %             5 small_frequent
+BM_MemoryAllocation_Patterns/1                       62.5 us         61.0 us        11659 medium_balanced
+BM_MemoryAllocation_Patterns/1                       61.2 us         60.9 us        11659 medium_balanced
+BM_MemoryAllocation_Patterns/1                       60.7 us         60.5 us        11659 medium_balanced
+BM_MemoryAllocation_Patterns/1                       62.0 us         61.2 us        11659 medium_balanced
+BM_MemoryAllocation_Patterns/1                       60.9 us         60.7 us        11659 medium_balanced
+BM_MemoryAllocation_Patterns/1_mean                  61.5 us         60.9 us            5 medium_balanced
+BM_MemoryAllocation_Patterns/1_median                61.2 us         60.9 us            5 medium_balanced
+BM_MemoryAllocation_Patterns/1_stddev               0.767 us        0.271 us            5 medium_balanced
+BM_MemoryAllocation_Patterns/1_cv                    1.25 %          0.45 %             5 medium_balanced
+BM_MemoryAllocation_Patterns/2                       82.0 us         81.6 us         8629 large_infrequent
+BM_MemoryAllocation_Patterns/2                       81.4 us         81.1 us         8629 large_infrequent
+BM_MemoryAllocation_Patterns/2                       83.9 us         81.9 us         8629 large_infrequent
+BM_MemoryAllocation_Patterns/2                       81.4 us         81.1 us         8629 large_infrequent
+BM_MemoryAllocation_Patterns/2                       81.4 us         81.2 us         8629 large_infrequent
+BM_MemoryAllocation_Patterns/2_mean                  82.0 us         81.4 us            5 large_infrequent
+BM_MemoryAllocation_Patterns/2_median                81.4 us         81.2 us            5 large_infrequent
+BM_MemoryAllocation_Patterns/2_stddev                1.11 us        0.363 us            5 large_infrequent
+BM_MemoryAllocation_Patterns/2_cv                    1.36 %          0.45 %             5 large_infrequent

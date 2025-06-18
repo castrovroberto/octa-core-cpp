@@ -1,0 +1,44 @@
+Unable to determine clock rate from sysctl: hw.cpufrequency: No such file or directory
+This does not affect benchmark measurements, only the metadata output.
+***WARNING*** Failed to set thread affinity. Estimated CPU frequency may be incorrect.
+2025-06-18T15:57:04-06:00
+Running ./build/build/Release/perf_suite
+Run on (8 X 24 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x8)
+Load Average: 3.47, 3.53, 3.33
+-------------------------------------------------------------------------------------
+Benchmark                                           Time             CPU   Iterations
+-------------------------------------------------------------------------------------
+BM_Scalability_MapSize/1                        12249 ns        12211 ns        57749 map_radius_1
+BM_Scalability_MapSize/1                        12150 ns        12107 ns        57749 map_radius_1
+BM_Scalability_MapSize/1                        12106 ns        12075 ns        57749 map_radius_1
+BM_Scalability_MapSize/1_mean                   12168 ns        12131 ns            3 map_radius_1
+BM_Scalability_MapSize/1_median                 12150 ns        12107 ns            3 map_radius_1
+BM_Scalability_MapSize/1_stddev                  73.4 ns         71.3 ns            3 map_radius_1
+BM_Scalability_MapSize/1_cv                      0.60 %          0.59 %             3 map_radius_1
+BM_Scalability_MapSize/8                        44569 ns        44422 ns        15835 map_radius_8
+BM_Scalability_MapSize/8                        44926 ns        44696 ns        15835 map_radius_8
+BM_Scalability_MapSize/8                        46102 ns        45035 ns        15835 map_radius_8
+BM_Scalability_MapSize/8_mean                   45199 ns        44717 ns            3 map_radius_8
+BM_Scalability_MapSize/8_median                 44926 ns        44696 ns            3 map_radius_8
+BM_Scalability_MapSize/8_stddev                   802 ns          308 ns            3 map_radius_8
+BM_Scalability_MapSize/8_cv                      1.77 %          0.69 %             3 map_radius_8
+BM_Scalability_MapSize_BigO                   5750.16 N       5690.32 N     map_radius_1
+BM_Scalability_MapSize_RMS                         16 %            16 %     map_radius_1
+BM_CachePerformance_AccessPattern/1              45.4 us         45.2 us        15307 stride_1
+BM_CachePerformance_AccessPattern/1              45.9 us         45.6 us        15307 stride_1
+BM_CachePerformance_AccessPattern/1              45.5 us         45.4 us        15307 stride_1
+BM_CachePerformance_AccessPattern/1_mean         45.6 us         45.4 us            3 stride_1
+BM_CachePerformance_AccessPattern/1_median       45.5 us         45.4 us            3 stride_1
+BM_CachePerformance_AccessPattern/1_stddev      0.249 us        0.179 us            3 stride_1
+BM_CachePerformance_AccessPattern/1_cv           0.55 %          0.39 %             3 stride_1
+BM_CachePerformance_AccessPattern/4              47.6 us         45.9 us        15456 stride_4
+BM_CachePerformance_AccessPattern/4              45.5 us         45.4 us        15456 stride_4
+BM_CachePerformance_AccessPattern/4              45.7 us         45.5 us        15456 stride_4
+BM_CachePerformance_AccessPattern/4_mean         46.3 us         45.6 us            3 stride_4
+BM_CachePerformance_AccessPattern/4_median       45.7 us         45.5 us            3 stride_4
+BM_CachePerformance_AccessPattern/4_stddev       1.18 us        0.300 us            3 stride_4
+BM_CachePerformance_AccessPattern/4_cv           2.54 %          0.66 %             3 stride_4
