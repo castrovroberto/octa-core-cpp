@@ -202,7 +202,7 @@ struct GameConfig {
 
 ## 📚 Documentation
 
-- **[API Documentation](https://robertocastro.github.io/octa-core-cpp/)** - Full Doxygen documentation
+- **[API Documentation](https://castrovroberto.github.io/octa-core-cpp/)** - Full Doxygen documentation
 - **[Game Rules](docs/srd-v0.3.2.md)** - Complete game mechanics specification
 - **[Implementation Plan](docs/implementation-plan-overview.md)** - Development roadmap
 - **[Architecture Guide](docs/graph-map.md)** - Technical deep-dive

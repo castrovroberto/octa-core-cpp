@@ -1,8 +1,3 @@
-Below is the **complete, self-contained “Final Requirements Specification v3.2”** for the Octa-Core C++ port.
-You can copy-paste it directly into version control as `SRD_v3.2.md`.
-
----
-
 # Octa-Core C++ Port – Final Requirements Specification (v3.2)
 
 **Status:** Approved & ready for development
@@ -352,6 +347,3 @@ CMake presets: `dev-debug.json`, `dev-release.json`, `package-unity.json`, `pack
 3. End of **Week 7:** share engine demo scenes for stakeholder review.
 4. Changes after v3.2 require **CR (Change Request)** workflow.
 
----
-
-*Document ends – v3.2 is now the single source of truth.*
