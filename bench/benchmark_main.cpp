@@ -211,20 +211,20 @@ BENCHMARK(BM_Direction_Operations);
  * @param chainLength Target chain length
  * @return Starting cell for the chain reaction
  */
-static std::shared_ptr<GameCell> setupChainReaction(std::shared_ptr<GraphGameMap> gameMap, 
-                                                   int chainLength) {
+static std::shared_ptr<GameCell> setupChainReaction(std::shared_ptr<GraphGameMap> gameMap,
+                                                    int chainLength) {
     // Create a controlled chain setup
     // Start from center and work outward in a predictable pattern
     std::vector<Coordinate> coords = {
-        Coordinate(0, 0),   // Center
-        Coordinate(1, 0),   // Right
-        Coordinate(0, 1),   // Up
-        Coordinate(-1, 0),  // Left
-        Coordinate(0, -1),  // Down
-        Coordinate(1, 1),   // NE
-        Coordinate(-1, 1),  // NW
-        Coordinate(-1, -1), // SW
-        Coordinate(1, -1),  // SE
+        Coordinate(0, 0),    // Center
+        Coordinate(1, 0),    // Right
+        Coordinate(0, 1),    // Up
+        Coordinate(-1, 0),   // Left
+        Coordinate(0, -1),   // Down
+        Coordinate(1, 1),    // NE
+        Coordinate(-1, 1),   // NW
+        Coordinate(-1, -1),  // SW
+        Coordinate(1, -1),   // SE
     };
 
     // Set up cells to create a chain of specified length
@@ -252,7 +252,7 @@ static void BM_MakeMove_ShortChain(benchmark::State& state) {
     for (auto _ : state) {
         logic.resetGame();
         auto startCell = setupChainReaction(gameMap, 5);  // 5-cell chain
-        
+
         auto result = logic.makeMove(startCell, Player::PLAYER_1);
         benchmark::DoNotOptimize(result);
     }
@@ -269,7 +269,7 @@ static void BM_MakeMove_MediumChain(benchmark::State& state) {
 
     for (auto _ : state) {
         logic.resetGame();
-        
+
         // Create medium chain setup - more complex pattern
         for (int x = -2; x <= 2; ++x) {
             for (int y = -2; y <= 2; ++y) {
@@ -281,7 +281,7 @@ static void BM_MakeMove_MediumChain(benchmark::State& state) {
                 }
             }
         }
-        
+
         auto startCell = gameMap->at(Coordinate(0, 0));
         auto result = logic.makeMove(startCell, Player::PLAYER_1);
         benchmark::DoNotOptimize(result);
@@ -290,7 +290,7 @@ static void BM_MakeMove_MediumChain(benchmark::State& state) {
 BENCHMARK(BM_MakeMove_MediumChain);
 
 /**
- * @brief Benchmark long chain reactions (100+ cells) 
+ * @brief Benchmark long chain reactions (100+ cells)
  */
 static void BM_MakeMove_LongChain(benchmark::State& state) {
     auto gameMap = std::make_shared<GraphGameMap>(6);  // 13x13 map for long chains
@@ -299,7 +299,7 @@ static void BM_MakeMove_LongChain(benchmark::State& state) {
 
     for (auto _ : state) {
         logic.resetGame();
-        
+
         // Create long chain setup - spiral pattern from center outward
         for (int x = -6; x <= 6; ++x) {
             for (int y = -6; y <= 6; ++y) {
@@ -311,7 +311,7 @@ static void BM_MakeMove_LongChain(benchmark::State& state) {
                 }
             }
         }
-        
+
         auto startCell = gameMap->at(Coordinate(0, 0));
         auto result = logic.makeMove(startCell, Player::PLAYER_1);
         benchmark::DoNotOptimize(result);
@@ -331,10 +331,10 @@ static void BM_MakeMove_NoChain(benchmark::State& state) {
 
     for (auto _ : state) {
         logic.resetGame();
-        
+
         // Set up cell that won't explode (low value)
         centerCell->setValue(1);  // Well below explosion threshold
-        
+
         auto result = logic.makeMove(centerCell, Player::PLAYER_1);
         benchmark::DoNotOptimize(result);
     }
@@ -351,20 +351,20 @@ static void BM_MakeMove_ComplexBranching(benchmark::State& state) {
 
     for (auto _ : state) {
         logic.resetGame();
-        
+
         // Create star pattern for complex branching
         std::vector<Coordinate> starPattern = {
-            Coordinate(0, 0),   // Center
-            Coordinate(2, 0),   // East arm
-            Coordinate(0, 2),   // North arm  
-            Coordinate(-2, 0),  // West arm
-            Coordinate(0, -2),  // South arm
-            Coordinate(1, 1),   // NE arm
-            Coordinate(-1, 1),  // NW arm
-            Coordinate(-1, -1), // SW arm
-            Coordinate(1, -1),  // SE arm
+            Coordinate(0, 0),    // Center
+            Coordinate(2, 0),    // East arm
+            Coordinate(0, 2),    // North arm
+            Coordinate(-2, 0),   // West arm
+            Coordinate(0, -2),   // South arm
+            Coordinate(1, 1),    // NE arm
+            Coordinate(-1, 1),   // NW arm
+            Coordinate(-1, -1),  // SW arm
+            Coordinate(1, -1),   // SE arm
         };
-        
+
         for (const auto& coord : starPattern) {
             auto cell = gameMap->at(coord);
             if (cell) {
@@ -373,7 +373,7 @@ static void BM_MakeMove_ComplexBranching(benchmark::State& state) {
                 cell->setValue(neighborCount - 1);
             }
         }
-        
+
         auto startCell = gameMap->at(Coordinate(0, 0));
         auto result = logic.makeMove(startCell, Player::PLAYER_1);
         benchmark::DoNotOptimize(result);
@@ -386,13 +386,14 @@ BENCHMARK(BM_MakeMove_ComplexBranching);
  */
 static void BM_MakeMove_WithLightUndo(benchmark::State& state) {
     auto gameMap = std::make_shared<GraphGameMap>(2);  // 5x5 map
-    GameConfig config(WinCondition::ELIMINATION, 100, false, SafetyLevel::LIGHT_UNDO);  // Enable LIGHT_UNDO
+    GameConfig config(WinCondition::ELIMINATION, 100, false,
+                      SafetyLevel::LIGHT_UNDO);  // Enable LIGHT_UNDO
     OctaGameLogic logic(gameMap, config);
 
     for (auto _ : state) {
         logic.resetGame();
         auto startCell = setupChainReaction(gameMap, 5);  // 5-cell chain with undo logging
-        
+
         auto result = logic.makeMove(startCell, Player::PLAYER_1);
         benchmark::DoNotOptimize(result);
     }
@@ -409,19 +410,19 @@ static void BM_MakeMove_MaxChainLength(benchmark::State& state) {
 
     for (auto _ : state) {
         logic.resetGame();
-        
+
         // Create maximum density chain setup
         for (int x = -8; x <= 8; ++x) {
             for (int y = -8; y <= 8; ++y) {
                 auto cell = gameMap->at(Coordinate(x, y));
-                if (cell && (x*x + y*y) % 7 == 0) {  // Radial sparse pattern
+                if (cell && (x * x + y * y) % 7 == 0) {  // Radial sparse pattern
                     cell->setState(CellState::PLAYER_1);
                     int neighborCount = cell->getValidNeighborCount();
                     cell->setValue(neighborCount - 1);
                 }
             }
         }
-        
+
         auto startCell = gameMap->at(Coordinate(0, 0));
         auto result = logic.makeMove(startCell, Player::PLAYER_1);
         benchmark::DoNotOptimize(result);
@@ -440,7 +441,7 @@ static void BM_MakeMove_LargeMapStress(benchmark::State& state) {
 
     for (auto _ : state) {
         logic.resetGame();
-        
+
         // Simple move on large map to test map size overhead
         auto centerCell = gameMap->at(Coordinate(0, 0));
         if (centerCell) {

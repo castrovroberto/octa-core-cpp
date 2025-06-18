@@ -4,7 +4,9 @@
  */
 
 #include "octa-core/core/CellChange.h"
+
 #include "octa-core/core/GameCell.h"
+
 #include <stdexcept>
 
 void CellChange::restore() const {
@@ -14,4 +16,4 @@ void CellChange::restore() const {
 
     cell->setState(oldState);
     cell->setDirection(oldDirection);
-} 
+}

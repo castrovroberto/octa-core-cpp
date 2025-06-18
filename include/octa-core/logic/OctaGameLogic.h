@@ -195,8 +195,7 @@ class OctaGameLogic : public IGameLogic {
      *
      * Part of Phase P2.1.2 implementation.
      */
-    void recordCellChange(std::vector<CellChange>& undoLog, 
-                         std::shared_ptr<GameCell> cell) const;
+    void recordCellChange(std::vector<CellChange>& undoLog, std::shared_ptr<GameCell> cell) const;
 
     /**
      * @brief Initializes game state to starting conditions

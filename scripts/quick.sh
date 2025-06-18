@@ -56,31 +56,20 @@ case "$1" in
         ;;
     release)
         printf "%s🏁 Building and testing release version...%s\n" "${BLUE}" "${NC}"
-        # Use conan-release if available, otherwise dev-release
-        if [[ -f "build/build/Release/generators/CMakePresets.json" ]] && 
-           grep -q "conan-release" build/build/Release/generators/CMakePresets.json 2>/dev/null; then
-            RELEASE_PRESET="conan-release"
-        else
-            RELEASE_PRESET="dev-release"
-        fi
+        # Delegate preset detection to manage.sh
+        RELEASE_PRESET=$("$MANAGE_SCRIPT" detect-preset release)
         "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" build
         "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" test
         ;;
     bench)
         printf "%s⚡ Running performance benchmarks...%s\n" "${BLUE}" "${NC}"
-        # Use conan-release if available, otherwise dev-release
-        if [[ -f "build/build/Release/generators/CMakePresets.json" ]] && 
-           grep -q "conan-release" build/build/Release/generators/CMakePresets.json 2>/dev/null; then
-            RELEASE_PRESET="conan-release"
-        else
-            RELEASE_PRESET="dev-release"
-        fi
-        "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" build
+        # Delegate preset detection to manage.sh
+        RELEASE_PRESET=$("$MANAGE_SCRIPT" detect-preset release)
         "$MANAGE_SCRIPT" -p "$RELEASE_PRESET" benchmark
         ;;
     check)
         printf "%s✅ Quick test validation...%s\n" "${BLUE}" "${NC}"
-        # Use the default debug preset (auto-detected by manage.sh)
+        # Use the auto-detected debug preset (default behavior of manage.sh)
         "$MANAGE_SCRIPT" test
         ;;
     fmt)

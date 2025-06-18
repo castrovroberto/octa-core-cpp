@@ -15,8 +15,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "../../include/octa-core/core/Direction.h"
 #include "../../include/octa-core/core/CellChange.h"
+#include "../../include/octa-core/core/Direction.h"
 
 OctaGameLogic::OctaGameLogic(std::shared_ptr<IGameMap> gameMap, const GameConfig& config)
     : gameMap_(gameMap), config_(config), gameOver_(false) {
@@ -66,10 +66,11 @@ GameResult OctaGameLogic::makeMove(std::shared_ptr<GameCell> cell, Player player
 
     // Initialize undo log for LIGHT_UNDO safety system
     std::vector<CellChange> undoLog;
-    
+
     try {
         // Execute the chain reaction with undo logging
-        std::vector<std::shared_ptr<GameCell>> affectedCells = executeChainReaction(cell, player, undoLog);
+        std::vector<std::shared_ptr<GameCell>> affectedCells =
+            executeChainReaction(cell, player, undoLog);
 
         // Switch to next player
         switchPlayer();
@@ -100,7 +101,7 @@ GameResult OctaGameLogic::makeMove(std::shared_ptr<GameCell> cell, Player player
                 }
             }
         }
-        
+
         // Re-throw the original exception after cleanup
         throw;
     }
@@ -161,13 +162,14 @@ void OctaGameLogic::resetGame(const GameConfig* newConfig) {
 }
 
 std::vector<std::shared_ptr<GameCell>>
-OctaGameLogic::executeChainReaction(std::shared_ptr<GameCell> startCell, Player player, std::vector<CellChange>& undoLog) {
+OctaGameLogic::executeChainReaction(std::shared_ptr<GameCell> startCell, Player player,
+                                    std::vector<CellChange>& undoLog) {
     std::vector<std::shared_ptr<GameCell>> affectedCells;
     std::queue<std::shared_ptr<GameCell>> explosionQueue;
 
     // Record the starting cell's state before modification (LIGHT_UNDO)
     recordCellChange(undoLog, startCell);
-    
+
     // Set the starting cell to the player's ownership and increment its value
     startCell->setState(playerToCellState(player));
     startCell->setValue(startCell->getValue() + 1);
@@ -329,7 +331,7 @@ void OctaGameLogic::validateConfig(const GameConfig& config) const {
     }
 }
 
-void OctaGameLogic::recordCellChange(std::vector<CellChange>& undoLog, 
+void OctaGameLogic::recordCellChange(std::vector<CellChange>& undoLog,
                                      std::shared_ptr<GameCell> cell) const {
     if (config_.safetyLevel == SafetyLevel::LIGHT_UNDO && cell) {
         undoLog.emplace_back(cell, cell->getState(), cell->getDirection());
