@@ -1,0 +1,119 @@
+[gd_scene load_steps=2 format=3 uid="uid://bnbdfr7ib8fj5"]
+
+[ext_resource type="Script" path="res://scripts/GameController.gd" id="1_1m8j6"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_1m8j6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Octa-Core Game Engine Demo"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GamePanel" type="Panel" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/HBoxContainer/GamePanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
+columns = 5
+
+[node name="InfoPanel" type="VBoxContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 2
+custom_minimum_size = Vector2(250, 0)
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+text = "Turn: 0"
+horizontal_alignment = 1
+
+[node name="PlayerLabel" type="Label" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+text = "Current Player: Player 1"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+text = "Score - Player 1: 0 | Player 2: 0"
+horizontal_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+
+[node name="InstructionsLabel" type="RichTextLabel" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "[b]How to Play:[/b]
+
+• Click on your cells or neutral cells to make moves
+• Cell values increase with each move
+• When a cell reaches 4+ dots, it explodes and spreads to neighbors
+• Chain reactions can occur!
+• Capture all enemy cells to win
+
+[b]Player 1:[/b] Light Blue
+[b]Player 2:[/b] Light Coral"
+fit_content = true
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+
+[node name="NewGameButton" type="Button" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+text = "New Game"
+
+[node name="QuitButton" type="Button" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+text = "Quit"
+
+[node name="HSeparator4" type="HSeparator" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+
+[node name="TechInfoLabel" type="RichTextLabel" parent="VBoxContainer/HBoxContainer/InfoPanel"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "[b]Technical Demo[/b]
+
+This demo showcases the Octa-Core C++ game engine integrated with Godot.
+
+Engine Features:
+• High-performance C++ core
+• Chain reaction algorithm
+• Multiple safety levels
+• Comprehensive testing
+• Benchmarking system"
+fit_content = true 

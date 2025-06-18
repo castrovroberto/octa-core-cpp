@@ -32,6 +32,56 @@ add_executable(
     src/logic/OctaGameLogic.cpp
 )
 
+# Define shared library for Godot integration
+option(BUILD_GODOT_BINDING "Build shared library for Godot" OFF)
+if(BUILD_GODOT_BINDING)
+    add_library(
+        octacore-godot SHARED
+        src/core/GameCell.cpp
+        src/core/CellChange.cpp
+        src/map/GraphGameMap.cpp
+        src/map/ArrayGameMap.cpp
+        src/engine/GameEngine.cpp
+        src/logic/OctaGameLogic.cpp
+        src/bindings/c_api.cpp
+    )
+    
+    target_include_directories(
+        octacore-godot
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    
+    # Set shared library properties for cross-platform compatibility
+    if(WIN32)
+        set_target_properties(octacore-godot PROPERTIES
+            OUTPUT_NAME "octacore"
+            SUFFIX ".dll"
+        )
+    elseif(APPLE)
+        set_target_properties(octacore-godot PROPERTIES
+            OUTPUT_NAME "octacore"
+            SUFFIX ".dylib"
+        )
+    else()
+        set_target_properties(octacore-godot PROPERTIES
+            OUTPUT_NAME "octacore"
+            SUFFIX ".so"
+        )
+    endif()
+    
+    # Link spdlog if available
+    if(spdlog_FOUND)
+        target_link_libraries(octacore-godot PRIVATE spdlog::spdlog)
+        target_compile_definitions(octacore-godot PRIVATE OCTA_ENABLE_LOGGING)
+    endif()
+    
+    # Compiler-specific options
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(octacore-godot PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endif()
+
 # Set target properties
 target_include_directories(
     octa-core
