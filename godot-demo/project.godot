@@ -13,15 +13,14 @@ config_version=5
 config/name="Octa-Core Demo"
 config/description="Technical demo of the Octa-Core game engine"
 run/main_scene="res://scenes/Main.tscn"
-config/features=PackedStringArray("4.2", "Mobile")
+config/features=PackedStringArray("4.4", "Mobile")
 config/icon="res://icon.svg"
 
 [display]
 
 window/size/viewport_width=1024
 window/size/viewport_height=768
-window/size/resizable=true
 
 [rendering]
 
-renderer/rendering_method="mobile" 
+renderer/rendering_method="mobile"

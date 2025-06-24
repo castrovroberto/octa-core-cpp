@@ -1,0 +1,10 @@
+ea4bc82a6ad023ab7ee23ee620429895
+::res://::1750291538
+icon.svg::CompressedTexture2D/CompressedTexture2D::7484372283175316359::1750287506::1750287748::1::::<><><>0<>0<>8f4541c1ef0bebfae9d49d8ffc6cd7c6<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+README.md::TextFile::-1::1750291495::0::1::::<><><>0<>0<><>::
+::res://lib/::1750287376
+::res://scenes/::1750288101
+Main.tscn::PackedScene::3301132051386222332::1750291448::0::1::::<><><>0<>0<><>::uid://emweq8rfkybm::::res://scripts/GameController.gd
+::res://scripts/::1750288101
+GameController.gd::GDScript::306871716748981390::1750291421::0::1::::<>Control<><>0<>0<><>::
+OctaCoreAPI.gd::GDScript::4572238254479432519::1750291388::0::1::::OctaCoreAPI<>RefCounted<><>0<>0<><>::

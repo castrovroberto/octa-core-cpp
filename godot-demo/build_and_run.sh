@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "🚀 Building Octa-Core Demo for Stakeholders"
-echo "==========================================="
+echo "🚀 Building Octa-Core Hexagonal Honeycomb Demo for Stakeholders"
+echo "============================================================="
 
 # Colors for output
 RED='\033[0;31m'
@@ -31,7 +31,7 @@ else
     exit 1
 fi
 
-echo -e "${BLUE}Step 3: Demo ready!${NC}"
+echo -e "${BLUE}Step 3: Hexagonal honeycomb demo ready!${NC}"
 echo ""
 echo -e "${YELLOW}📋 Demo Instructions:${NC}"
 echo "1. Open Godot 4.2+"
@@ -39,13 +39,14 @@ echo "2. Import this project (godot-demo folder)"
 echo "3. Run the project (F5 or Play button)"
 echo ""
 echo -e "${YELLOW}🎯 Stakeholder Demo Points:${NC}"
-echo "• Show the working game interface"
-echo "• Make moves to demonstrate turn-based gameplay"
-echo "• Trigger chain reactions (4+ dots explode)"
-echo "• Highlight the technical info panel"
-echo "• Start a new game to show reset functionality"
+echo "• Show the stunning hexagonal honeycomb layout"
+echo "• Click hexagons to demonstrate arrow rotation (60°)"
+echo "• Trigger honeycomb chain reactions"
+echo "• Highlight the 6-directional system (original format)"
+echo "• Show recursive contagion through honeycomb paths"
+echo "• Emphasize this is the canonical 'Hex Contagion' game"
 echo ""
-echo -e "${GREEN}🎮 Demo is ready for stakeholder presentation!${NC}"
+echo -e "${GREEN}🎮 Hexagonal honeycomb demo is ready for stakeholder presentation!${NC}"
 
 # Optional: Launch Godot if available
 if command -v godot &> /dev/null; then
